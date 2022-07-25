@@ -9,7 +9,7 @@
 
 ATopViewPracticePlayerController::ATopViewPracticePlayerController()
 {
-	bShowMouseCursor = true;
+	bShowMouseCursor = false;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
 }
 
