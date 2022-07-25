@@ -81,6 +81,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
 	bool bRunInput;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
+	bool bCrouchInput;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
 	bool bGrenadeInput;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
 	bool bReloadInput;
@@ -96,6 +98,10 @@ public:
 	bool bMuzzleUp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
 	bool bRunning;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
+	bool bCrouch;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
+	bool bTryFire;
 
 	// Player character state
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | State")
@@ -110,14 +116,8 @@ public:
 	float CameraMaxDistance;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Camera")
 	float CameraMinDistance;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Camera")
-	float CameraRotationAngle;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Camera")
-	float CameraMaxRotationAngle;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Camera")
-	float CameraMinRotationAngle;
-
+	float CameraADSDistance;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Camera")
 	float CameraSensitivity;
@@ -147,6 +147,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
 	float RunSpeed;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
+	float ADSSpeed;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
 	float DiveAcceleration;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
 	float DiveDuration;
@@ -163,7 +165,10 @@ public:
 	float IKRotaionStrength;
 
 	float TimeMuzzleMoving;
+	bool bCanAim;
 	float SpinePitch;
+	float TargetSpeed;
+	FRotator CamRotation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Weapon")
 	class AWeapon* EquippedWeapon;
@@ -200,6 +205,9 @@ public:
 	void Zoom(float Value);
 	UFUNCTION()
 	void HorizontalTurn(float Value);
+	UFUNCTION()
+	void VerticalTurn(float Value);
+
 	
 	UFUNCTION()
 	void LMBDown();
@@ -215,6 +223,11 @@ public:
 	void RunDown();
 	UFUNCTION()
 	void RunUp();
+
+	UFUNCTION()
+	void CrouchDown();
+	UFUNCTION()
+	void CrouchUp();
 
 	UFUNCTION()
 	void GrenadeDown();
@@ -279,10 +292,6 @@ public:
 	float GetCameraDistance();
 	UFUNCTION(BlueprintCallable)
 	void SetCameraDistance(float Value);
-	UFUNCTION(BlueprintCallable)
-	float GetCameraRotationAngle();
-	UFUNCTION(BlueprintCallable)
-	void SetCameraRotationAngle(float Value);
 
 private:
 	/**
@@ -293,8 +302,7 @@ private:
 
 	FVector DiveDirection;
 
-	float CameraYaw;
-
+	float TempCameraDistance;
 
 	FTimerHandle FireTimerHandle;
 	TArray<AActor*> MuzzleColliderArray;
@@ -308,6 +316,4 @@ private:
 	void RestorCharacterSpeed();
 
 	void Fire();
-
-	bool MultiHitUnderCursor(FHitResult& CursorHitResult);
 };
