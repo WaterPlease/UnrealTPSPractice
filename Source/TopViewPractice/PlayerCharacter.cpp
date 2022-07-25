@@ -366,9 +366,9 @@ void APlayerCharacter::CrouchDown()
 	}
 	else
 	{
-		GetCapsuleComponent()->SetCapsuleHalfHeight(88.f);
-		GetMesh()->AddRelativeLocation(FVector(0.f, 0.f, -34.f));
 		MuzzleUpTriggerBox->AddRelativeLocation(FVector(0.f, 0.f, 34.f));
+		GetMesh()->AddRelativeLocation(FVector(0.f, 0.f, -34.f));
+		GetCapsuleComponent()->SetCapsuleHalfHeight(88.f);
 	}
 }
 
@@ -451,19 +451,26 @@ void APlayerCharacter::DodgeDown()
 
 		// Find direction of diving
 		// => Moving direction or character's looking direction if no movement
-		FVector UpVector = GetCameraComponent()->GetUpVector();
-		UpVector.Z = 0.f;
-		UpVector = UpVector.GetSafeNormal();
+		FVector FrontVector = -FVector::CrossProduct(
+			GetCameraComponent()->GetUpVector(),
+			GetCameraComponent()->GetRightVector());
+		FrontVector.Z = 0.f;
+		FrontVector = FrontVector.GetSafeNormal();
 		FVector RightVector = GetCameraComponent()->GetRightVector();
 		RightVector.Z = 0.f;
 		RightVector = RightVector.GetSafeNormal();
 
-		DiveDirection = UpVector * GetInputAxisValue(FName("Vertical")) +
+		DiveDirection = FrontVector * GetInputAxisValue(FName("Vertical")) +
 							 RightVector * GetInputAxisValue(FName("Horizontal"));
 		if (DiveDirection.IsNearlyZero())
-			DiveDirection = GetMesh()->GetRightVector();
+		{
+			DiveDirection = CursorToWorld->GetComponentLocation() - GetActorLocation();
+			DiveDirection.Z = 0.f;
+		}	
 		else
+		{
 			DiveDirection = DiveDirection.GetSafeNormal();
+		}
 
 		FRotator Rotation = UKismetMathLibrary::FindLookAtRotation(FVector(0.f), DiveDirection);
 		Rotation.Pitch = 0.f;
