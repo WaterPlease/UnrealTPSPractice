@@ -45,6 +45,14 @@ public:
 	float ADSSpinePitch;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bADS;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bTryFire;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bRunning;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bCrouch;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bFalling;
 	
 	
 public:

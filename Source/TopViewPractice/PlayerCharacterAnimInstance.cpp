@@ -34,6 +34,10 @@ void UPlayerCharacterAnimInstance::NativeInitializeAnimation()
 
 	ADSSpinePitch = 0.f;
 	bADS = false;
+	bTryFire = false;
+	bRunning = false;
+	bCrouch = false;
+	bFalling = false;
 
 	CapsuleLocation = FVector(0.f);
 }
@@ -62,7 +66,12 @@ void UPlayerCharacterAnimInstance::UpdateProperties()
 		PlayerActionState = PlayerCharacter->PlayerActionState;
 
 		bADS = PlayerCharacter->bRMBInput;
-		if (bADS)
+		bTryFire = PlayerCharacter->bTryFire;
+		bRunning = PlayerCharacter->bRunning;
+		bCrouch = PlayerCharacter->bCrouch;
+		bFalling = PlayerCharacter->GetCharacterMovement()->IsFalling();
+
+		if (bADS || bTryFire)
 		{
 			ADSSpinePitch = FMath::FInterpTo(
 				ADSSpinePitch,
