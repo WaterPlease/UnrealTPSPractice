@@ -26,6 +26,49 @@ public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
 
+	/**
+	* Components
+	*/
+	/** Top down camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | Camera", meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* CameraComponent;
+	/** Camera boom positioning the camera above the character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | Camera", meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* CameraBoom;
+	/** A decal that projects to the cursor location. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | Cursor", meta = (AllowPrivateAccess = "true"))
+	UDecalComponent* CursorToWorld;
+	/** Animation Montage for Character's Action*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
+	class UAnimMontage* FireMontage;
+
+
+	/**
+	* Weapon components from AWeapon Actor
+	*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class USkeletalMeshComponent* WeaponMeshComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class USoundCue* GunFireSoundCue;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class USoundCue* ThrowingSoundCue;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class USoundCue* MagInSoundCue;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class USoundCue* MagOutSoundCue;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class USoundCue* RackingBoltSoundCue;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class USoundCue* EmptyShotSoundCue;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class UParticleSystem* MuzzleParticleSystem;
 
 	/**
 	* Input State
@@ -82,9 +125,9 @@ public:
 	uint8 ZoomLevel;
 
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Camera")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Stats")
 	float BaseGunRPM;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Camera")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Stats")
 	float GunRPMMultiplier;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
 	uint8 RoundCapacity;
@@ -120,6 +163,11 @@ public:
 
 	float TimeMuzzleMoving;
 	float SpinePitch;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Weapon")
+	class AWeapon* EquippedWeapon;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Weapon")
+	class AWeapon* WeaponToEquipped;
 
 	/**
 	* Pulic Actor/Component Declaration
@@ -203,6 +251,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DiveDone();
 
+	void EquipWeapon(class AWeapon* Weapon);
+
 	// Muzzle Up trigger handler
 	UFUNCTION()
 	void OnMuzzleTriggerOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -231,48 +281,8 @@ public:
 
 private:
 	/**
-	* Private Component Declaration
+	* Private Variable Declaration
 	*/
-	/** Top down camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | Camera", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* CameraComponent;
-	/** Camera boom positioning the camera above the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | Camera", meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
-	/** A decal that projects to the cursor location. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | Cursor", meta = (AllowPrivateAccess = "true"))
-	UDecalComponent* CursorToWorld;
-	
-	/**
-	* User Private Field Declaration
-	*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
-	class UAnimMontage* FireMontage;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
-	class USkeletalMeshComponent* WeaponMeshComponent;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
-	class USoundCue* GunFireSoundCue;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
-	class USoundCue* ThrowingSoundCue;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
-	class USoundCue* MagInSoundCue;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
-	class USoundCue* MagOutSoundCue;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
-	class USoundCue* RackingBoltSoundCue;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
-	class USoundCue* EmptyShotSoundCue;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
-	class UParticleSystem* MuzzleParticleSystem;
-
 	FRotator CharcterRotation;
 	FRotator DiveRotation;
 

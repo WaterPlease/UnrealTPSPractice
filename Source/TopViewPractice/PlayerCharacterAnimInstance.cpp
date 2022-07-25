@@ -28,6 +28,7 @@ void UPlayerCharacterAnimInstance::NativeInitializeAnimation()
 	IKTraceRightFoot = 0.f;
 	IKRotationLeftFoot = FRotator(0.f);
 	IKRotationRightFoot = FRotator(0.f);
+	IKHandGripLocation = FVector(0.f);
 	TimeMuzzleMoving = 0.f;
 	TimeToMoveMuzzle = 1.f;
 
@@ -115,6 +116,9 @@ void UPlayerCharacterAnimInstance::UpdateProperties()
 		);
 		IKTraceHips = FMath::Min<float>(IKTraceRightFoot, IKTraceLeftFoot);
 		//IKTraceHips = FMath::Max<float>(IKTraceHips, -50.f);
+
+
+		IKHandGripLocation = PlayerCharacter->WeaponMeshComponent->GetSocketLocation("GripSocket");
 	}
 }
 
