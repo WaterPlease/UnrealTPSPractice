@@ -13,6 +13,7 @@ enum class EPlayerActionState : uint8
 	EPA_Throwing UMETA(DisplayName = "Throwing"),
 	EPA_Reloading UMETA(DisplayName = "Reloading"),
 	EPA_Diving UMETA(DisplayName = "Diving"),
+	EPA_Dead UMETA(DisplayName = "Dead"),
 
 	EPA_MAX UMETA(DisplayName = "DefaultMax")
 };
@@ -252,12 +253,16 @@ public:
 	void DiveDone();
 
 	void EquipWeapon(class AWeapon* Weapon);
+	void Die();
 
 	// Muzzle Up trigger handler
 	UFUNCTION()
 	void OnMuzzleTriggerOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnMuzzleTriggerOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 
 	/**
