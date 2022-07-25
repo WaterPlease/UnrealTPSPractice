@@ -17,6 +17,8 @@
 #include "Particles/ParticleSystem.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/PlayerController.h"
+#include "Weapon.h"
+#include "Particles/ParticleSystemComponent.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -62,7 +64,8 @@ APlayerCharacter::APlayerCharacter()
 
 	// Weapon Mesh
 	WeaponMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMeshComponent"));
-	WeaponMeshComponent->AttachTo(GetMesh(), FName("LeftHandSocket"));
+	//WeaponMeshComponent->AttachTo(GetMesh(), FName("LeftHandSocket"));
+	WeaponMeshComponent->AttachTo(GetMesh(), FName("RightHandSocket"));
 	//WeaponMeshComponent->AttachTo(GetRootComponent());
 
 	// Muzzle Up Triggerbox
@@ -71,6 +74,7 @@ APlayerCharacter::APlayerCharacter()
 
 	// Input State Initialization
 	bLMBInput = false;
+	bRMBInput = false;
 	bInteractionInput = false;
 	bDodgeInput = false;
 	bMuzzleUp = false;
@@ -145,8 +149,11 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	UpdateCharacterLook();
+	// Find Cursor position in world space and Character Look cursor.
 	UpdateCurosorTransform();
+	UpdateCharacterLook();
+
+	// Tick function by Player's action state
 	switch (PlayerActionState)
 	{
 	case EPlayerActionState::EPA_Diving :
@@ -156,16 +163,21 @@ void APlayerCharacter::Tick(float DeltaTime)
 		break;
 	}
 
+	// Muzzle up check & smooth animation
 	if (bMuzzleUp)
 		TimeMuzzleMoving += DeltaTime;
 	else
 		TimeMuzzleMoving -= DeltaTime;
 	TimeMuzzleMoving = FMath::Min(FMath::Max(TimeMuzzleMoving,0.f), TimeToMoveMuzzle);
 
+
+	// Get Pithch angle of spine to make character aim to cursor
 	FVector NeckToCursor = GetMesh()->GetSocketLocation("Neck") - CursorToWorld->GetComponentLocation();
 	float DistOnXY = FMath::Sqrt(NeckToCursor.X * NeckToCursor.X + NeckToCursor.Y * NeckToCursor.Y);
 	SpinePitch = FMath::RadiansToDegrees(FMath::Atan2(NeckToCursor.Z, DistOnXY));
 
+
+	// Smooth camera
 	float TempDist = CameraBoom->TargetArmLength;
 	float TempRot = CameraBoom->GetRelativeRotation().Pitch;
 	if (!FMath::IsNearlyEqual(TempDist, CameraDistance) ||
@@ -240,6 +252,7 @@ void APlayerCharacter::InputHorizontal(float Value)
 	}
 }
 
+// Zoom input handler
 void APlayerCharacter::Zoom(float Value)
 {
 	if (!FMath::IsNearlyZero(Value))
@@ -252,6 +265,7 @@ void APlayerCharacter::Zoom(float Value)
 	}
 }
 
+// Horizontal turn (mouse drag) input handler
 void APlayerCharacter::HorizontalTurn(float Value)
 {
 	if (bCameraRotationInput && !FMath::IsNearlyZero(Value))
@@ -330,8 +344,8 @@ void APlayerCharacter::ReloadDown()
 		AnimInstance->Montage_Play(FireMontage, 2.f);
 		AnimInstance->Montage_JumpToSection(FName("Reload"), FireMontage);
 
-		WeaponMeshComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-		WeaponMeshComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform, FName("RightHandSocket"));
+		//WeaponMeshComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		//WeaponMeshComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform, FName("RightHandSocket"));
 
 		PlayerActionState = EPlayerActionState::EPA_Reloading;
 	}
@@ -345,6 +359,11 @@ void APlayerCharacter::ReloadUp()
 void APlayerCharacter::InteractionDown()
 {
 	bInteractionInput = true;
+
+	if (WeaponToEquipped)
+	{
+		EquipWeapon(WeaponToEquipped);
+	}
 }
 
 void APlayerCharacter::InteractionUp()
@@ -366,6 +385,8 @@ void APlayerCharacter::DodgeDown()
 		AnimInstance->Montage_JumpToSection(FName("Dive"), FireMontage);
 
 
+		// Find direction of diving
+		// => Moving direction or character's looking direction if no movement
 		FVector UpVector = GetCameraComponent()->GetUpVector();
 		UpVector.Z = 0.f;
 		UpVector = UpVector.GetSafeNormal();
@@ -387,9 +408,12 @@ void APlayerCharacter::DodgeDown()
 		GetMesh()->SetWorldRotation(Rotation);
 		DiveRotation = Rotation;
 
+		// Set moving speed
 		GetCharacterMovement()->MaxWalkSpeed = RunSpeed * DiveAcceleration;
 
 		PlayerActionState = EPlayerActionState::EPA_Diving;
+
+		// Cancel other aciton.
 		GetWorldTimerManager().ClearTimer(FireTimerHandle);
 	}
 }
@@ -431,6 +455,35 @@ void APlayerCharacter::DiveDone()
 	RestorCharacterSpeed();
 }
 
+// Equip Weapon
+void APlayerCharacter::EquipWeapon(AWeapon* Weapon)
+{
+	AWeapon* OldWeapon = EquippedWeapon;
+	EquippedWeapon = Weapon;
+	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName("RightHandSocket"));
+	Weapon->GetMesh()->SetVisibility(false);
+	Weapon->ItemParticleSystem->SetVisibility(false);
+	WeaponMeshComponent->SetSkeletalMesh(Weapon->WeaponMesh);
+	WeaponMeshComponent->SetRelativeTransform(Weapon->WeaponRelativeTransform);
+
+	MuzzleUpTriggerBox->SetWorldLocation(WeaponMeshComponent->GetSocketLocation("MuzzleSocket"));
+	MuzzleUpTriggerBox->SetWorldScale3D(Weapon->MuzzleSize3D);
+	MuzzleUpTriggerBox->AddRelativeLocation(FVector(0.f, -MuzzleUpTriggerBox->GetScaledBoxExtent().Y, 0.f));
+
+	GunFireSoundCue = Weapon->FireSoundCue;
+	MuzzleParticleSystem = Weapon->MuzzleParticleSystem;
+
+	BaseGunRPM = Weapon->BaseGunRPM;
+	RoundCapacity = Weapon->RoundCapacity;
+	RoundRemain = RoundCapacity+1;
+
+	if (OldWeapon)
+	{
+		OldWeapon->Destroy();
+	}
+}
+
+// Muzzle up event handler
 void APlayerCharacter::OnMuzzleTriggerOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	bMuzzleUp = true;
@@ -443,6 +496,7 @@ void APlayerCharacter::OnMuzzleTriggerOverlapBegin(UPrimitiveComponent* Overlapp
 	UE_LOG(LogTemp, Warning, TEXT("Muzzle UP!"));
 }
 
+// Muzzle up event handler
 void APlayerCharacter::OnMuzzleTriggerOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (MuzzleColliderArray.Contains(OtherActor))
@@ -477,6 +531,7 @@ void APlayerCharacter::SetCameraRotationAngle(float Value)
 	CameraRotationAngle = Value;
 }
 
+// Smooth character look direction update
 void APlayerCharacter::UpdateCharacterLook()
 {
 	FRotator Rotation;
@@ -504,28 +559,13 @@ void APlayerCharacter::UpdateCharacterLook()
 	GetMesh()->SetWorldRotation(CharcterRotation);
 }
 
+// Find proper cursor position in world space
 void APlayerCharacter::UpdateCurosorTransform()
 {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 
 	if (PlayerController)
 	{
-		/*
-		FHitResult HitResult;
-		PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, HitResult);
-
-		DrawDebugLine(
-			GetWorld(),
-			HitResult.Location,
-			HitResult.Location + HitResult.Normal * 50.f,
-			FColor::Red
-			);
-
-		FVector CursorFV = HitResult.ImpactNormal;
-		FRotator CursorR = CursorFV.Rotation();
-		CursorToWorld->SetWorldLocation(HitResult.Location);
-		CursorToWorld->SetWorldRotation(CursorR);
-		*/
 		FHitResult HitResult;
 		if (MultiHitUnderCursor(HitResult))
 		{
@@ -537,6 +577,7 @@ void APlayerCharacter::UpdateCurosorTransform()
 	}
 }
 
+// Fire weapon and play fire animation of player character
 void APlayerCharacter::Fire()
 {
 	if (!bLMBInput || bMuzzleUp) return;
@@ -568,18 +609,41 @@ void APlayerCharacter::Fire()
 		FRotator MuzzleRotation = WeaponMeshComponent->GetSocketRotation(FName("MuzzleSocket"));;
 		FVector MuzzleScale = FVector(0.08f);
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleParticleSystem, MuzzleLocation,MuzzleRotation,MuzzleScale);
+
+
+		if (EquippedWeapon)
+		{
+			FVector TargetLocation = CursorToWorld->GetComponentLocation();
+
+			if (!bRMBInput)
+			{
+				TargetLocation.Z = MuzzleLocation.Z;
+			}
+
+			EquippedWeapon->Fire(
+				MuzzleLocation,
+				TargetLocation - MuzzleLocation
+			);
+		}
 	}
 	GetWorldTimerManager().SetTimer(FireTimerHandle, this, &APlayerCharacter::Fire, 60.f / (BaseGunRPM * GunRPMMultiplier));
 }
 
+// Restore character's speed
+// It can be used right after some action that affects character's speed.
 void APlayerCharacter::RestorCharacterSpeed()
 {
+	if (PlayerActionState == EPlayerActionState::EPA_Diving) return;
 	if (bRunning)
 		GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 	else
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
+
+// Find "proper" cursor location in world space
+// proper location means location on ground or other location on objects
+// except the wall between character and camera
 bool APlayerCharacter::MultiHitUnderCursor(FHitResult& CursorHitResult)
 {
 		APlayerController* PlayerController = Cast<APlayerController>(GetController());

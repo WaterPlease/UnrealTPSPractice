@@ -71,6 +71,8 @@ public:
 	FRotator IKRotationLeftFoot;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IK")
 	float IKTraceHips;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IK")
+	FVector IKHandGripLocation;
 
 	
 	void UpdateIKTraceDistance();
