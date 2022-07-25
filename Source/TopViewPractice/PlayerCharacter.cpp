@@ -436,7 +436,8 @@ void APlayerCharacter::CameraRotationUp()
 bool APlayerCharacter::CanMove()
 {
 	return 
-		PlayerActionState != EPlayerActionState::EPA_Diving;
+		PlayerActionState != EPlayerActionState::EPA_Diving &&
+		PlayerActionState != EPlayerActionState::EPA_Dead;
 }
 
 void APlayerCharacter::Reload()
@@ -483,6 +484,15 @@ void APlayerCharacter::EquipWeapon(AWeapon* Weapon)
 	}
 }
 
+void APlayerCharacter::Die()
+{
+	PlayerActionState = EPlayerActionState::EPA_Dead;
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+	//GetMesh()->SetAllBodiesSimulatePhysics(true);
+	//GetMesh()->SetAllBodiesPhysicsBlendWeight(1.f);
+}
+
 // Muzzle up event handler
 void APlayerCharacter::OnMuzzleTriggerOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -509,6 +519,17 @@ void APlayerCharacter::OnMuzzleTriggerOverlapEnd(UPrimitiveComponent* Overlapped
 		bMuzzleUp = false;
 		UE_LOG(LogTemp, Warning, TEXT("Muzzle Down!"));
 	}
+}
+
+float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float EffectiveDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	Health -= EffectiveDamage;
+	if (Health < 0.f)
+	{
+		Die();
+	}
+	return EffectiveDamage;
 }
 
 float APlayerCharacter::GetCameraDistance()
@@ -556,7 +577,8 @@ void APlayerCharacter::UpdateCharacterLook()
 		CharacterTurnSpeed
 	);
 
-	GetMesh()->SetWorldRotation(CharcterRotation);
+	if (CanMove())
+		GetMesh()->SetWorldRotation(CharcterRotation);
 }
 
 // Find proper cursor position in world space
