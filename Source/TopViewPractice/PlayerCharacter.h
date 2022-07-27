@@ -39,9 +39,9 @@ public:
 	/** A decal that projects to the cursor location. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | Cursor", meta = (AllowPrivateAccess = "true"))
 	UDecalComponent* CursorToWorld;
-	/** Animation Montage for Character's Action*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
-	class UAnimMontage* FireMontage;
+	/** A decal that projects to the cursor location. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | UI", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* CombatUI;
 
 
 	/**
@@ -70,6 +70,14 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
 	class UParticleSystem* MuzzleParticleSystem;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class UBoxComponent* MuzzleUpTriggerBox;
+	
+	
+	/** Animation Montage for Character's Action*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
+	class UAnimMontage* FireMontage;
 
 	/**
 	* Input State
@@ -175,11 +183,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Weapon")
 	class AWeapon* WeaponToEquipped;
 
-	/**
-	* Pulic Actor/Component Declaration
-	*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
-	class UBoxComponent* MuzzleUpTriggerBox;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character | UI")
+	FRotator CombatUIIdleRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character | UI")
+	FRotator CombatUIADSRotation;
 
 protected:
 	// Called when the game starts or when spawned
@@ -306,6 +314,8 @@ private:
 
 	FTimerHandle FireTimerHandle;
 	TArray<AActor*> MuzzleColliderArray;
+
+	FRotator CombatUIRotation;
 
 	/**
 	* User Private Function Declaration
