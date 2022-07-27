@@ -7,6 +7,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -48,6 +49,12 @@ APlayerCharacter::APlayerCharacter()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(CameraBoom,USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;
+
+	// Combat UI Configuration
+	CombatUI = CreateDefaultSubobject<UWidgetComponent>(TEXT("CombatUI"));
+	//CombatUI->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	CombatUI->SetupAttachment(CameraComponent);
+	CombatUI->bHiddenInSceneCapture = true;
 
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -123,6 +130,8 @@ APlayerCharacter::APlayerCharacter()
 	SpinePitch = 0.f;
 
 	CharcterRotation = FRotator(0.f);
+	CombatUIADSRotation = FRotator(0.0f, 180.f, 0.0);
+	CombatUIIdleRotation = FRotator(0.0f, 230.f, 0.0);
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -146,6 +155,8 @@ void APlayerCharacter::BeginPlay()
 
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	TargetSpeed = WalkSpeed;
+
+	CharcterRotation = CombatUIIdleRotation;
 }
 
 // Called every frame
@@ -210,6 +221,19 @@ void APlayerCharacter::Tick(float DeltaTime)
 		TempSpeed = FMath::FInterpTo(TempSpeed, TargetSpeed, DeltaTime, CameraBoom->CameraLagSpeed);
 		GetCharacterMovement()->MaxWalkSpeed = TempSpeed;
 		GetCharacterMovement()->MaxWalkSpeedCrouched = TempSpeed * 0.5f;
+	}
+
+	// Smooth Combat UI Rotation
+	FRotator CurrentUIRotation = CombatUI->GetRelativeRotation();
+	if (!CurrentUIRotation.Equals(CombatUIRotation))
+	{
+		CurrentUIRotation = FMath::RInterpTo(
+			CurrentUIRotation,
+			CombatUIRotation,
+			DeltaTime,
+			5.f
+		);
+		CombatUI->SetRelativeRotation(CurrentUIRotation);
 	}
 }
 
@@ -325,6 +349,7 @@ void APlayerCharacter::RMBDown()
 	TempCameraDistance = CameraDistance;
 	CameraDistance = CameraADSDistance;
 	TargetSpeed = ADSSpeed;
+	CombatUIRotation = CombatUIADSRotation;
 }
 
 void APlayerCharacter::RMBUp()
@@ -332,6 +357,7 @@ void APlayerCharacter::RMBUp()
 	bRMBInput = false;
 
 	CameraDistance = TempCameraDistance;
+	CombatUIRotation = CombatUIIdleRotation;
 	RestorCharacterSpeed();
 }
 
@@ -523,7 +549,6 @@ void APlayerCharacter::Reload()
 void APlayerCharacter::DiveDone()
 {
 	PlayerActionState = EPlayerActionState::EPA_Idle;
-
 	RestorCharacterSpeed();
 }
 
@@ -758,6 +783,9 @@ void APlayerCharacter::RestorCharacterSpeed()
 		TargetSpeed = RunSpeed;
 	else
 		TargetSpeed = WalkSpeed;
+
+	if (bRMBInput)
+		TargetSpeed = ADSSpeed;
 
 	if (bCrouch)
 		TargetSpeed *= 0.5f;

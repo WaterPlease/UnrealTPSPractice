@@ -38,6 +38,7 @@ void ABaseBullet::BeginPlay()
 	BulletHead->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	BulletHead->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Ignore);
 	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
 
