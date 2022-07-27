@@ -93,6 +93,7 @@ APlayerCharacter::APlayerCharacter()
 	bCrouch = false;
 	bTryFire = false;
 	bCanAim = false;
+	bHeal = true;
 
 	PlayerActionState = EPlayerActionState::EPA_Idle;
 
@@ -113,6 +114,9 @@ APlayerCharacter::APlayerCharacter()
 	Health = 100.f;
 	HealthRegenRate = 10.f;
 	HealthRegenDelay = 10.f;
+	MaxStamina = 100.f;
+	Stamina = 100.f;
+	StaminaRegenRate = 20.f;
 	WalkSpeed = 200.f;
 	RunSpeed = 600.f;
 	ADSSpeed = 100.f;
@@ -120,6 +124,8 @@ APlayerCharacter::APlayerCharacter()
 	DiveDuration = 1.f;
 	CharacterTurnSpeed = 15.f;
 	CharacterAimTurnSpeed = 15.f;
+	DodgeStamina = 50.f;
+	JumpStamina = 25.f;
 
 	bIKRotation = true;
 	IKRotaionStrength = 1.2f;
@@ -171,6 +177,13 @@ void APlayerCharacter::Tick(float DeltaTime)
 	// Tick function by Player's action state
 	switch (PlayerActionState)
 	{
+	case EPlayerActionState::EPA_Idle :
+		if (bHeal)
+		{
+			Health = FMath::Min(MaxHealth, Health + DeltaTime * HealthRegenRate);
+		}
+		Stamina = FMath::Min(MaxStamina, Stamina + DeltaTime * StaminaRegenRate);
+		break;
 	case EPlayerActionState::EPA_Diving :
 		AddMovementInput(DiveDirection, 1.0f);
 		break;
@@ -254,7 +267,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction(TEXT("Crouch"), EInputEvent::IE_Pressed, this, &APlayerCharacter::CrouchDown);
 	PlayerInputComponent->BindAction(TEXT("Crouch"), EInputEvent::IE_Released, this, &APlayerCharacter::CrouchUp);
 
-	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
 	//PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Released, this, &APlayerCharacter::CrouchUp);
 
 	PlayerInputComponent->BindAction(TEXT("Grenade"), EInputEvent::IE_Pressed, this, &APlayerCharacter::GrenadeDown);
@@ -403,6 +416,16 @@ void APlayerCharacter::CrouchUp()
 	bCrouchInput = false;
 }
 
+void APlayerCharacter::Jump()
+{
+	if (Stamina > JumpStamina &&
+		CanJump())
+	{
+		Stamina -= JumpStamina;
+		Super::Jump();
+	}
+}
+
 void APlayerCharacter::GrenadeDown()
 {
 	bGrenadeInput = true;
@@ -465,8 +488,9 @@ void APlayerCharacter::DodgeDown()
 	bDodgeInput = true;
 
 	if (PlayerActionState == EPlayerActionState::EPA_Diving ||
-		GetCharacterMovement()->IsFalling()) return;
-
+		GetCharacterMovement()->IsFalling() ||
+		Stamina < DodgeStamina) return;
+	Stamina -= DodgeStamina;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
