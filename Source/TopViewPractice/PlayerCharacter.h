@@ -151,6 +151,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
 	float HealthRegenDelay;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
+	float MaxStamina;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
+	float Stamina;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
+	float StaminaRegenRate;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
+	float DodgeStamina;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
+	float JumpStamina;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
 	float WalkSpeed;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
 	float RunSpeed;
@@ -174,6 +184,7 @@ public:
 
 	float TimeMuzzleMoving;
 	bool bCanAim;
+	bool bHeal;
 	float SpinePitch;
 	float TargetSpeed;
 	FRotator CamRotation;
@@ -236,6 +247,8 @@ public:
 	void CrouchDown();
 	UFUNCTION()
 	void CrouchUp();
+	
+	virtual void Jump() override;
 
 	UFUNCTION()
 	void GrenadeDown();
