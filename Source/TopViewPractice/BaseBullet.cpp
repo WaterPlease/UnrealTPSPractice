@@ -37,7 +37,8 @@ void ABaseBullet::BeginPlay()
 	BulletHead->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel2);
 	BulletHead->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	BulletHead->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	//BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Ignore);
 	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
@@ -76,6 +77,7 @@ void ABaseBullet::Tick(float DeltaTime)
 void ABaseBullet::OnBulletHeadOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor == Shooter) return;
+
 	DestroyBullet();
 }
 
