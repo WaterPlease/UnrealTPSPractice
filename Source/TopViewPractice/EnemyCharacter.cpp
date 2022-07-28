@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimInstance.h"
 #include "Kismet/GameplayStatics.h"
@@ -23,13 +24,38 @@ AEnemyCharacter::AEnemyCharacter()
 
 	AttackSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AttackSphere"));
 	AttackSphere->SetupAttachment(GetRootComponent());
-	
-	AttackCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackCollision"));
-	AttackCollision->AttachTo(GetMesh(), FName("AttackSocket"));
+
+	LookAtSphere = CreateDefaultSubobject<USphereComponent>(TEXT("LookAtSphere"));
+	LookAtSphere->SetupAttachment(GetRootComponent());
+
+	AttackCollisionA = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackCollisionA"));
+	AttackCollisionA->AttachTo(GetMesh(), FName("AttackSocketA"));
+	AttackCollisionB = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackCollisionB"));
+	AttackCollisionB->AttachTo(GetMesh(), FName("AttackSocketB"));
+
+	AttackCollisions.Add(AttackCollisionA);
+	AttackCollisions.Add(AttackCollisionB);
+
+	// Radar point load
+	RadarPoint = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RadarPoint"));
+	RadarPoint->SetupAttachment(GetRootComponent());
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMesh(
+		TEXT("StaticMesh'/Game/HUD/Plane.Plane'")
+	);
+	RadarPoint->SetStaticMesh(PlaneMesh.Object);
+
+	static ConstructorHelpers::FObjectFinder<UMaterialInstance> RadarPointMaterial(
+		TEXT("MaterialInstanceConstant'/Game/HUD/MinimapPoint_Enemy_MAT.MinimapPoint_Enemy_MAT'")
+	);
+	RadarPoint->SetMaterial(0, RadarPointMaterial.Object);
+	RadarPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 1000.f));
 
 	EnemyActionState = EEnemyActionState::EEA_Idle;
 	bCanAttack = false;
 	bWaitAttack = false;
+
+	bTryLookAt = false;
 
 	// Prevent rotation of character by camera
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -38,6 +64,8 @@ AEnemyCharacter::AEnemyCharacter()
 	bUseControllerRotationYaw = false;
 
 	AttackDelay = 1.5f;
+
+	NumAttackType = 1;
 }
 
 // Called when the game starts or when spawned
@@ -47,6 +75,13 @@ void AEnemyCharacter::BeginPlay()
 
 	AIController = Cast<AAIController>(GetController());
 
+	// LookAtSphere Configuration
+	LookAtSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::LookAtSphereBeginOverlap);
+	LookAtSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemyCharacter::LookAtSphereEndOverlap);
+	LookAtSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	LookAtSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	LookAtSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+
 	// AttackSphere Configuration
 	AttackSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::AttackSphereBeginOverlap);
 	AttackSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemyCharacter::AttackSphereEndOverlap);
@@ -55,12 +90,26 @@ void AEnemyCharacter::BeginPlay()
 	AttackSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 
 	// AttackCollision Configuration
-	AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::AttackCollisionBeginOverlap);
-	AttackCollision->OnComponentEndOverlap.AddDynamic(this, &AEnemyCharacter::AttackCollisionEndOverlap);
-	AttackCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	AttackCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	AttackCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-	AttackCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Destructible, ECollisionResponse::ECR_Overlap);
+	AttackCollisionA->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::AttackCollisionBeginOverlap);
+	AttackCollisionA->OnComponentEndOverlap.AddDynamic(this, &AEnemyCharacter::AttackCollisionEndOverlap);
+	AttackCollisionA->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AttackCollisionA->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	AttackCollisionA->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	AttackCollisionA->SetCollisionResponseToChannel(ECollisionChannel::ECC_Destructible, ECollisionResponse::ECR_Overlap);
+	
+	AttackCollisionB->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::AttackCollisionBeginOverlap);
+	AttackCollisionB->OnComponentEndOverlap.AddDynamic(this, &AEnemyCharacter::AttackCollisionEndOverlap);
+	AttackCollisionB->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AttackCollisionB->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	AttackCollisionB->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	AttackCollisionB->SetCollisionResponseToChannel(ECollisionChannel::ECC_Destructible, ECollisionResponse::ECR_Overlap);
+
+
+	// Mesh Collision tracing channel Configuration
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+
+	RadarPoint->SetRelativeScale3D(FVector((2.f / 34.f) * GetCapsuleComponent()->GetUnscaledCapsuleRadius()));
+
 }
 
 // Called every frame
@@ -77,6 +126,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			Attack();
 		else
 			ChasePlayer();
+		break;
 	case EEnemyActionState::EEA_Chase:
 		if (bCanAttack)
 			Attack();
@@ -94,6 +144,10 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	default:
 		break;
 	}
+
+	if (bTryLookAt &&
+		EnemyActionState != EEnemyActionState::EEA_Attack)
+		LookAtPlayer(DeltaTime);
 }
 
 void AEnemyCharacter::AttackSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -112,6 +166,8 @@ void AEnemyCharacter::AttackSphereEndOverlap(UPrimitiveComponent* OverlappedComp
 
 void AEnemyCharacter::AttackCollisionBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (AIController)
+		AIController->StopMovement();
 	// overlap with player
 	if (Cast<APawn>(OtherActor))
 	{
@@ -121,7 +177,10 @@ void AEnemyCharacter::AttackCollisionBeginOverlap(UPrimitiveComponent* Overlappe
 		// ...
 		return;
 	}
-		
+	
+	UBoxComponent* AttackCollision = Cast<UBoxComponent>(OverlappedComponent);
+	
+	if (!AttackCollision) return;
 	// overlap with destructible
 	FVector Impulse = AttackCollision->GetComponentVelocity() * 50.f;
 	OtherComp->AddImpulseAtLocation(Impulse, SweepResult.Location);
@@ -134,20 +193,38 @@ void AEnemyCharacter::AttackCollisionEndOverlap(UPrimitiveComponent* OverlappedC
 	// Nothing to Do...
 }
 
-void AEnemyCharacter::ActivateAttackCollision()
+void AEnemyCharacter::LookAtSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	AttackCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor);
+
+	if (!Player) return;
+
+	bTryLookAt = true;
 }
 
-void AEnemyCharacter::DeactivateAttackCollision()
+void AEnemyCharacter::LookAtSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	AttackCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor);
+
+	if (!Player) return;
+
+	bTryLookAt = false;
+}
+
+void AEnemyCharacter::ActivateAttackCollision(int idx)
+{
+	AttackCollisions[idx]->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+}
+
+void AEnemyCharacter::DeactivateAttackCollision(int idx)
+{
+	AttackCollisions[idx]->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AEnemyCharacter::AttackDone()
 {
 	EnemyActionState = EEnemyActionState::EEA_Idle;
-
+	UE_LOG(LogTemp, Warning, TEXT("AttackDone"));
 	GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AEnemyCharacter::WaitAttackDone, AttackDelay);
 }
 
@@ -157,6 +234,27 @@ APlayerCharacter* AEnemyCharacter::GetPlayerCharacter()
 
 	PlayerCharacter = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	return PlayerCharacter;
+}
+
+void AEnemyCharacter::LookAtPlayer(float DeltaTime)
+{
+	if (!PlayerCharacter) return;
+
+	FRotator EnemyRotation = GetActorRotation();
+	FVector EnemyLocation = GetActorLocation();
+	FVector PlayerLocation = PlayerCharacter->GetActorLocation();
+	FRotator TargetRotation = (PlayerLocation - EnemyLocation).Rotation();
+	TargetRotation.Pitch = 0.f;
+	TargetRotation.Roll = 0.f;
+
+	EnemyRotation = FMath::RInterpTo(
+		EnemyRotation,
+		TargetRotation,
+		DeltaTime,
+		5.f
+	);
+
+	SetActorRotation(EnemyRotation);
 }
 
 void AEnemyCharacter::ChasePlayer()
@@ -188,8 +286,10 @@ void AEnemyCharacter::Attack()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
+		int AttackType = FMath::Rand() % NumAttackType;
+
 		AnimInstance->Montage_Play(CombatMontage);
-		AnimInstance->Montage_JumpToSection("Attack", CombatMontage);
+		AnimInstance->Montage_JumpToSection(FName(TEXT("Attack") + FString::FromInt(AttackType)), CombatMontage);
 
 		// Change State
 		EnemyActionState = EEnemyActionState::EEA_Attack;

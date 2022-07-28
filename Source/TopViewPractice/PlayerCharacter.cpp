@@ -162,7 +162,7 @@ void APlayerCharacter::BeginPlay()
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	TargetSpeed = WalkSpeed;
 
-	CharcterRotation = CombatUIIdleRotation;
+	CombatUIRotation = CombatUIIdleRotation;
 }
 
 // Called every frame
@@ -333,13 +333,13 @@ void APlayerCharacter::Zoom(float Value)
 // Horizontal turn (mouse drag) input handler
 void APlayerCharacter::HorizontalTurn(float Value)
 {
-	CamRotation.Yaw += Value;
+	CamRotation.Yaw += Value * CameraSensitivity;
 }
 
 // Horizontal turn (mouse drag) input handler
 void APlayerCharacter::VerticalTurn(float Value)
 {
-	CamRotation.Pitch += Value;
+	CamRotation.Pitch += Value * CameraSensitivity;
 }
 
 void APlayerCharacter::LMBDown()
