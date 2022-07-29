@@ -37,9 +37,27 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
 	TSubclassOf<class ABaseBullet> BulletType;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
+	bool bAutomatic;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseDamage;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
 	float BaseGunRPM;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon | Stats")
 	uint8 RoundCapacity;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseMinSpread;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseMaxSpread;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseSpreadIncreaseSpeed;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseSpreadRestoreSpeed;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseVerticalRecoil;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseHorizontalRecoil;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseRecoilDamping;
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon | Stats")
@@ -48,7 +66,7 @@ public:
 private:
 
 public:
-	void Fire(const FVector& Location, const FVector& Direction);
+	void Fire(const FVector& Location, const FVector& Direction, bool bShotByPlayer = true);
 
 	virtual void OnItemSphereOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 	virtual void OnItemSphereOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;

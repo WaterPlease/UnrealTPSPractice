@@ -74,6 +74,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
 	class UBoxComponent* MuzzleUpTriggerBox;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | UI")
+	class USoundCue* HitSoundCue;
 	
 	/** Animation Montage for Character's Action*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
@@ -126,22 +128,38 @@ public:
 	float CameraMinDistance;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Camera")
 	float CameraADSDistance;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Camera")
-	float CameraSensitivity;
+	float CameraSensitivity; 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Camera")
 	uint8 ZoomLevel;
 
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Stats")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Stats")
+	bool bAutomatic;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | Stats")
 	float BaseGunRPM;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Stats")
 	float GunRPMMultiplier;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Stats")
 	uint8 RoundCapacity;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Stats")
 	uint8 RoundRemain;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
+	float Spread;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseMinSpread;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseMaxSpread;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseSpreadIncreaseSpeed;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseSpreadRestoreSpeed;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseVerticalRecoil;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseHorizontalRecoil;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
+	float BaseRecoilDamping;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
 	float MaxHealth;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
@@ -199,6 +217,19 @@ public:
 	FRotator CombatUIIdleRotation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character | UI")
 	FRotator CombatUIADSRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character | UI")
+	float CrosshairOffset;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | UI")
+	bool bHitmarkerDisplay;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character | UI")
+	float MaxHitmarkerLifeTime;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | UI")
+	float CursorLineTraceDistance;
+
+	FVector2D CursorOffset;
+	FVector CursorLocation;
+	FRotator RecoilVelocity;
+	float RecoilDampingTime;
 
 protected:
 	// Called when the game starts or when spawned
@@ -298,6 +329,10 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	void ShowHitmarker();
+	void HideHitmarker();
+	void ResetCursorOffset();
+	void ResetRecoilVelocity();
 
 	/**
 	* Component Get/Set function
@@ -324,8 +359,12 @@ private:
 	FVector DiveDirection;
 
 	float TempCameraDistance;
+	float TimeAfterShot;
 
 	FTimerHandle FireTimerHandle;
+	FTimerHandle HitmarkerTimerHandle;
+	FTimerHandle CursorResetTimerHandle;
+	FTimerHandle RecoilResetTimerHandle;
 	TArray<AActor*> MuzzleColliderArray;
 
 	FRotator CombatUIRotation;

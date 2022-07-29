@@ -23,6 +23,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/GameUserSettings.h"
+#include "Math/UnrealMathUtility.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -61,15 +62,15 @@ APlayerCharacter::APlayerCharacter()
 	// From : Unreal template(TopDown) code.
 	// 
 	// Create a decal in the world to show the cursor's location
-	CursorToWorld = CreateDefaultSubobject<UDecalComponent>("CursorToWorld");
-	CursorToWorld->SetupAttachment(RootComponent);
-	static ConstructorHelpers::FObjectFinder<UMaterial> DecalMaterialAsset(TEXT("Material'/Game/TopDownCPP/Blueprints/M_Cursor_Decal.M_Cursor_Decal'"));
-	if (DecalMaterialAsset.Succeeded())
-	{
-		CursorToWorld->SetDecalMaterial(DecalMaterialAsset.Object);
-	}
-	CursorToWorld->DecalSize = FVector(16.0f, 32.0f, 32.0f);
-	CursorToWorld->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f).Quaternion());
+	//CursorToWorld = CreateDefaultSubobject<UDecalComponent>("CursorToWorld");
+	//CursorToWorld->SetupAttachment(RootComponent);
+	//static ConstructorHelpers::FObjectFinder<UMaterial> DecalMaterialAsset(TEXT("Material'/Game/TopDownCPP/Blueprints/M_Cursor_Decal.M_Cursor_Decal'"));
+	//if (DecalMaterialAsset.Succeeded())
+	//{
+	//	CursorToWorld->SetDecalMaterial(DecalMaterialAsset.Object);
+	//}
+	//CursorToWorld->DecalSize = FVector(16.0f, 32.0f, 32.0f);
+	//CursorToWorld->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f).Quaternion());
 	/////////////////////////////////////////////////////////////////////////////
 
 	// Weapon Mesh
@@ -81,6 +82,11 @@ APlayerCharacter::APlayerCharacter()
 	// Muzzle Up Triggerbox
 	MuzzleUpTriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("MuzzleUpTriggerBox"));
 	MuzzleUpTriggerBox->SetupAttachment(GetMesh());
+
+	static ConstructorHelpers::FObjectFinder<USoundCue> SoundCue(
+		TEXT("SoundCue'/Game/PlayerCharacter/Sound/HitmarkerSound_Cue.HitmarkerSound_Cue'")
+	);
+	HitSoundCue = SoundCue.Object;
 
 	// Input State Initialization
 	bLMBInput = false;
@@ -106,10 +112,18 @@ APlayerCharacter::APlayerCharacter()
 	ZoomLevel = 3;
 	SetCameraDistance(CameraDistance);
 
+	bAutomatic = false;
 	BaseGunRPM = 650.f;
 	GunRPMMultiplier = 1.f;
 	RoundCapacity = 30;
 	RoundRemain = 31;
+	Spread = 0.f;
+	BaseMinSpread = 0.f;
+	BaseMaxSpread = 0.f;
+	BaseSpreadIncreaseSpeed = 0.2;
+	BaseSpreadRestoreSpeed = 5.f;
+	BaseVerticalRecoil = 0.f;
+	BaseHorizontalRecoil = 0.f;
 	MaxHealth = 100.f;
 	Health = 100.f;
 	HealthRegenRate = 10.f;
@@ -138,6 +152,14 @@ APlayerCharacter::APlayerCharacter()
 	CharcterRotation = FRotator(0.f);
 	CombatUIADSRotation = FRotator(0.0f, 180.f, 0.0);
 	CombatUIIdleRotation = FRotator(0.0f, 230.f, 0.0);
+	CrosshairOffset = 10.f;
+	bHitmarkerDisplay = false;
+	MaxHitmarkerLifeTime = 1.f;
+	CursorLineTraceDistance = 10000.f;
+	
+	CursorOffset = FVector2D(0.f);
+	RecoilVelocity = FRotator(0.f);
+
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -163,6 +185,8 @@ void APlayerCharacter::BeginPlay()
 	TargetSpeed = WalkSpeed;
 
 	CombatUIRotation = CombatUIIdleRotation;
+
+	Spread = BaseMinSpread;
 }
 
 // Called every frame
@@ -202,20 +226,24 @@ void APlayerCharacter::Tick(float DeltaTime)
 	// Get Pithch angle of spine to make character aim to cursor
 	if ((bRMBInput || bTryFire) && bCanAim)
 	{
-		FVector NeckToCursor = GetMesh()->GetSocketLocation("Neck") - CursorToWorld->GetComponentLocation();
+		FVector NeckToCursor = GetMesh()->GetSocketLocation("Neck") - CursorLocation;
 		float DistOnXY = FMath::Sqrt(NeckToCursor.X * NeckToCursor.X + NeckToCursor.Y * NeckToCursor.Y);
 		SpinePitch = FMath::RadiansToDegrees(FMath::Atan2(NeckToCursor.Z, DistOnXY));
 	}	
 	else if (bRMBInput || bTryFire)
 	{
-		FVector FrontVector = FVector::CrossProduct(
-			GetCameraComponent()->GetUpVector(),
-			GetCameraComponent()->GetRightVector());
+		FVector FrontVector = -GetCameraComponent()->GetForwardVector();
 		float DistOnXY = FMath::Sqrt(FrontVector.X * FrontVector.X + FrontVector.Y * FrontVector.Y);
 		SpinePitch = FMath::RadiansToDegrees(FMath::Atan2(FrontVector.Z, DistOnXY));
 	}
 
-
+	// Camera rotaion
+	RecoilDampingTime += DeltaTime;
+	FRotator RecoilRotation = DeltaTime * RecoilVelocity * FMath::Exp(-RecoilDampingTime * BaseRecoilDamping);
+	if (bCrouch)
+		RecoilRotation *= 0.5f;
+	CamRotation += RecoilRotation;
+	CamRotation.Pitch = FMath::Clamp<float>(CamRotation.Pitch, -80.f, 80.f);
 	CameraBoom->SetWorldRotation(CamRotation);
 	
 	// Smooth camera
@@ -248,6 +276,18 @@ void APlayerCharacter::Tick(float DeltaTime)
 		);
 		CombatUI->SetRelativeRotation(CurrentUIRotation);
 	}
+
+	// Weapon Stat tick
+	if (!bTryFire && !FMath::IsNearlyEqual(Spread, BaseMinSpread))
+	{
+		Spread = FMath::FInterpTo(
+			Spread,
+			BaseMinSpread,
+			DeltaTime,
+			BaseSpreadRestoreSpeed
+		);
+	}
+	TimeAfterShot += DeltaTime;
 }
 
 // Called to bind functionality to input
@@ -298,9 +338,7 @@ void APlayerCharacter::InputVertical(float Value)
 {
 	if (CanMove())
 	{
-		FVector FrontVector = -FVector::CrossProduct(
-			GetCameraComponent()->GetUpVector(),
-			GetCameraComponent()->GetRightVector());
+		FVector FrontVector = GetCameraComponent()->GetForwardVector();
 		FrontVector.Z = 0.f;
 		FVector Direction = FrontVector.GetSafeNormal();
 		AddMovementInput(Direction, Value);
@@ -501,9 +539,7 @@ void APlayerCharacter::DodgeDown()
 
 		// Find direction of diving
 		// => Moving direction or character's looking direction if no movement
-		FVector FrontVector = -FVector::CrossProduct(
-			GetCameraComponent()->GetUpVector(),
-			GetCameraComponent()->GetRightVector());
+		FVector FrontVector = GetCameraComponent()->GetForwardVector();
 		FrontVector.Z = 0.f;
 		FrontVector = FrontVector.GetSafeNormal();
 		FVector RightVector = GetCameraComponent()->GetRightVector();
@@ -514,7 +550,7 @@ void APlayerCharacter::DodgeDown()
 							 RightVector * GetInputAxisValue(FName("Horizontal"));
 		if (DiveDirection.IsNearlyZero())
 		{
-			DiveDirection = CursorToWorld->GetComponentLocation() - GetActorLocation();
+			DiveDirection = CursorLocation - GetActorLocation();
 			DiveDirection.Z = 0.f;
 		}	
 		else
@@ -594,9 +630,19 @@ void APlayerCharacter::EquipWeapon(AWeapon* Weapon)
 	GunFireSoundCue = Weapon->FireSoundCue;
 	MuzzleParticleSystem = Weapon->MuzzleParticleSystem;
 
+	bAutomatic = Weapon->bAutomatic;
 	BaseGunRPM = Weapon->BaseGunRPM;
 	RoundCapacity = Weapon->RoundCapacity;
 	RoundRemain = RoundCapacity+1;
+	BaseMinSpread = Weapon->BaseMinSpread;
+	BaseMaxSpread = Weapon->BaseMaxSpread;
+	BaseSpreadIncreaseSpeed = Weapon->BaseSpreadIncreaseSpeed;
+	BaseSpreadRestoreSpeed = Weapon->BaseSpreadRestoreSpeed;
+	BaseHorizontalRecoil = Weapon->BaseHorizontalRecoil;
+	BaseRecoilDamping = Weapon->BaseRecoilDamping;
+	BaseVerticalRecoil = Weapon->BaseVerticalRecoil;
+
+	Spread = BaseMinSpread;
 
 	if (OldWeapon)
 	{
@@ -650,6 +696,32 @@ float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 	return EffectiveDamage;
 }
 
+void APlayerCharacter::ShowHitmarker()
+{
+	bHitmarkerDisplay = true;
+
+	UGameplayStatics::PlaySound2D(GetWorld(),HitSoundCue);
+
+	GetWorldTimerManager().ClearTimer(HitmarkerTimerHandle);
+	GetWorldTimerManager().SetTimer(HitmarkerTimerHandle,this,&APlayerCharacter::HideHitmarker,MaxHitmarkerLifeTime);
+}
+
+void APlayerCharacter::HideHitmarker()
+{
+	bHitmarkerDisplay = false;
+}
+
+void APlayerCharacter::ResetCursorOffset()
+{
+	CursorOffset = FVector2D(0.f);
+}
+
+void APlayerCharacter::ResetRecoilVelocity()
+{
+	RecoilVelocity = FRotator(0.f);
+}
+
+
 float APlayerCharacter::GetCameraDistance()
 { 
 	return CameraDistance;
@@ -670,15 +742,11 @@ void APlayerCharacter::UpdateCharacterLook()
 	}
 	else
 	{
-		FVector CursorLocation = CursorToWorld->GetComponentLocation();
-
-		FVector FrontVector = -FVector::CrossProduct(
-			GetCameraComponent()->GetUpVector(),
-			GetCameraComponent()->GetRightVector());
+		FVector FrontVector = GetCameraComponent()->GetForwardVector();
 		FVector RightVector = GetCameraComponent()->GetRightVector();
 
 		FVector LookVector;
-			UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), CursorLocation);
+		//	UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), CursorLocation);
 		if (bRMBInput || bLMBInput)
 		{
 			LookVector = CursorLocation - GetActorLocation();//FrontVector;
@@ -724,13 +792,29 @@ void APlayerCharacter::UpdateCurosorTransform()
 	{
 		FIntPoint point = UGameUserSettings::GetGameUserSettings()->GetScreenResolution();
 		FHitResult HitResult;
-		if (PlayerController->GetHitResultAtScreenPosition(FVector2D(point.X / 2, point.Y / 2), ECollisionChannel::ECC_Visibility, true, HitResult))
+		bCanAim = GetWorld()->LineTraceSingleByChannel(HitResult,
+			GetCameraComponent()->GetComponentLocation(),
+			GetCameraComponent()->GetComponentLocation() + CursorLineTraceDistance * GetCameraComponent()->GetForwardVector(),
+			ECollisionChannel::ECC_GameTraceChannel1
+		);
+		FVector MuzzleLocation = WeaponMeshComponent->GetSocketLocation(FName("MuzzleSocket"));
+		DrawDebugLine(
+			GetWorld(),
+			MuzzleLocation,
+			GetCameraComponent()->GetComponentLocation() + CursorLineTraceDistance * GetCameraComponent()->GetForwardVector(),
+			FColor::Red
+		);
+		//if (PlayerController->GetHitResultAtScreenPosition(FVector2D(point.X / 2, point.Y / 2), ECollisionChannel::ECC_Visibility, true, HitResult))
+		if (bCanAim)
 		{
+			CursorLocation = HitResult.Location;
+			/*
 			FVector CursorFV = HitResult.ImpactNormal;
 			FRotator CursorR = CursorFV.Rotation();
 			CursorToWorld->SetWorldLocation(HitResult.Location);
 			CursorToWorld->SetWorldRotation(CursorR);
 			bCanAim = true;
+			*/
 		}
 		else
 		{
@@ -746,15 +830,20 @@ void APlayerCharacter::Fire()
 
 	if (PlayerActionState != EPlayerActionState::EPA_Idle) return;
 
+	float FireIntervalTime = 60.f / (BaseGunRPM * GunRPMMultiplier);
+
+	if (TimeAfterShot < FireIntervalTime) return;
+
 	if (RoundRemain == 0)
 	{
 		// Play empty shot sound
 		UE_LOG(LogTemp, Warning, TEXT("Remain Round : %d"), RoundRemain);
 		UGameplayStatics::PlaySound2D(GetWorld(), EmptyShotSoundCue);
-		bLMBInput = false;
+		bTryFire = false;
 		return;
 	}
-
+	
+	TimeAfterShot = 0.f;
 	RoundRemain -= 1;
 	UE_LOG(LogTemp, Warning, TEXT("Remain Round : %d"), RoundRemain);
 
@@ -771,31 +860,80 @@ void APlayerCharacter::Fire()
 		FVector MuzzleScale = FVector(0.08f);
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleParticleSystem, MuzzleLocation,MuzzleRotation,MuzzleScale);
 
+		if (!EquippedWeapon) return;
 
-		if (EquippedWeapon)
+		// 1. Get Spreaded direction
+		FVector OriginalDirection = GetCameraComponent()->GetForwardVector();
+		float RandomRadian = FMath::FRandRange(-PI,PI);
+		float RandomSin = FMath::Sin(RandomRadian);
+		float RandomCos = FMath::Cos(RandomRadian);
+		float RandomSpread = FMath::FRandRange(-Spread, Spread);
+		FVector RandomSpreadDirection = 
+			RandomSin * GetCameraComponent()->GetUpVector() + 
+			RandomCos * GetCameraComponent()->GetRightVector();
+		FVector SpreadedDirection = OriginalDirection * 100.f + RandomSpread * RandomSpreadDirection;
+
+		// 2. Find cursor offset
+		FMinimalViewInfo ViewInfo;
+		GetCameraComponent()->GetCameraView(GetWorld()->DeltaTimeSeconds, ViewInfo);
+		FMatrix ProjectionMatrix = ViewInfo.CalculateProjectionMatrix();
+		FVector4 ProjectedPosition = ProjectionMatrix.TransformPosition(FVector(RandomSpread * RandomCos, -RandomSpread * RandomSin, 100.f));
+		ProjectedPosition = ProjectedPosition / ProjectedPosition.W; // Into NDC : [-1,1]x[-1,1]
+		FVector2D ScreenSize;
+		GEngine->GameViewport->GetViewportSize(ScreenSize);
+		CursorOffset = FVector2D(ProjectedPosition.X, ProjectedPosition.Y) * ScreenSize * 0.5;
+		
+		// 2. Find TargetLocation using linetrace
+		FHitResult HitResult;
+		bool bTargetHit = GetWorld()->LineTraceSingleByChannel(HitResult,
+			GetCameraComponent()->GetComponentLocation(),
+			GetCameraComponent()->GetComponentLocation() + CursorLineTraceDistance * SpreadedDirection.GetSafeNormal(),
+			ECollisionChannel::ECC_GameTraceChannel1
+		);
+		FVector TargetLocation;
+		if (bTargetHit)
 		{
-			if (bCanAim)
-			{
-				FVector TargetLocation = CursorToWorld->GetComponentLocation();
-				EquippedWeapon->Fire(
-					MuzzleLocation,
-					TargetLocation - MuzzleLocation
-				);
-			}
-			else
-			{
-				FVector TargetLocation = GetCameraComponent()->GetComponentLocation() - 
-										 10000.f * FVector::CrossProduct(
-												GetCameraComponent()->GetUpVector(),
-												GetCameraComponent()->GetRightVector());
-				EquippedWeapon->Fire(
-					MuzzleLocation,
-					TargetLocation - MuzzleLocation
-				);
-			}
+			TargetLocation = HitResult.ImpactPoint;
 		}
+		else
+		{
+			TargetLocation = GetCameraComponent()->GetComponentLocation() +
+								CursorLineTraceDistance * SpreadedDirection.GetSafeNormal();
+		}
+
+		EquippedWeapon->Fire(
+			MuzzleLocation,
+			TargetLocation - MuzzleLocation
+		);
+
+		// Spread Increase
+		Spread = FMath::FInterpTo(
+			Spread,
+			BaseMaxSpread,
+			FireIntervalTime,
+			BaseSpreadIncreaseSpeed
+		);
+
+		// Give recoil velocity
+		RecoilVelocity.Yaw = FMath::FRandRange(-BaseHorizontalRecoil, BaseHorizontalRecoil);
+		RecoilVelocity.Pitch = BaseVerticalRecoil;
+		RecoilVelocity.Roll = 0.f;
+		RecoilDampingTime = 0.f;
+
+		GetWorldTimerManager().ClearTimer(CursorResetTimerHandle);
+		GetWorldTimerManager().SetTimer(CursorResetTimerHandle,this,&APlayerCharacter::ResetCursorOffset, FireIntervalTime + 0.3f);
+		GetWorldTimerManager().ClearTimer(RecoilResetTimerHandle);
+		GetWorldTimerManager().SetTimer(RecoilResetTimerHandle, this, &APlayerCharacter::ResetRecoilVelocity, FireIntervalTime + 0.1f);
 	}
-	GetWorldTimerManager().SetTimer(FireTimerHandle, this, &APlayerCharacter::Fire, 60.f / (BaseGunRPM * GunRPMMultiplier));
+	if (bAutomatic)
+	{
+		GetWorldTimerManager().SetTimer(FireTimerHandle, this, &APlayerCharacter::Fire, FireIntervalTime);
+	}
+	else
+	{
+		Spread = BaseMaxSpread;
+		bTryFire = false;
+	}
 }
 
 // Restore character's speed

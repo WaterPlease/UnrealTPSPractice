@@ -9,13 +9,25 @@
 
 AWeapon::AWeapon()
 {
-	
+	bAutomatic = false;
+	BaseGunRPM = 650.f;
+	RoundCapacity = 30;
+	BaseMinSpread = 1.0f;
+	BaseMaxSpread = 2.0f;
+	BaseSpreadIncreaseSpeed = 0.2f;
+	BaseSpreadRestoreSpeed = 5.f;
+	BaseVerticalRecoil = 0.f;
+	BaseHorizontalRecoil = 0.f;
+	BaseRecoilDamping = 1.f;
 }
 
-void AWeapon::Fire(const FVector& Location, const FVector& Direction)
+void AWeapon::Fire(const FVector& Location, const FVector& Direction, bool bShotByPlayer)
 {
 	ABaseBullet* Bullet = GetWorld()->SpawnActor<ABaseBullet>(BulletType, Location, FRotator(0.f));
 	Bullet->Shooter = (AActor*)UGameplayStatics::GetPlayerPawn(GetWorld(),0);
+	Bullet->Instigator = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	Bullet->bShotByPlayer = bShotByPlayer;
+	Bullet->Damage = BaseDamage;
 	Bullet->LauchBullet(Direction);
 }
 
