@@ -41,12 +41,12 @@ AEnemyCharacter::AEnemyCharacter()
 	RadarPoint->SetupAttachment(GetRootComponent());
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMesh(
-		TEXT("StaticMesh'/Game/HUD/Plane.Plane'")
+		TEXT("StaticMesh'/Game/HUD/Mesh/Plane.Plane'")
 	);
 	RadarPoint->SetStaticMesh(PlaneMesh.Object);
 
 	static ConstructorHelpers::FObjectFinder<UMaterialInstance> RadarPointMaterial(
-		TEXT("MaterialInstanceConstant'/Game/HUD/MinimapPoint_Enemy_MAT.MinimapPoint_Enemy_MAT'")
+		TEXT("MaterialInstanceConstant'/Game/HUD/Materials/MinimapPoint_Enemy_MAT.MinimapPoint_Enemy_MAT'")
 	);
 	RadarPoint->SetMaterial(0, RadarPointMaterial.Object);
 	RadarPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 1000.f));
@@ -96,6 +96,7 @@ void AEnemyCharacter::BeginPlay()
 	AttackCollisionA->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	AttackCollisionA->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 	AttackCollisionA->SetCollisionResponseToChannel(ECollisionChannel::ECC_Destructible, ECollisionResponse::ECR_Overlap);
+	AttackCollisionA->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 	
 	AttackCollisionB->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::AttackCollisionBeginOverlap);
 	AttackCollisionB->OnComponentEndOverlap.AddDynamic(this, &AEnemyCharacter::AttackCollisionEndOverlap);
@@ -103,10 +104,17 @@ void AEnemyCharacter::BeginPlay()
 	AttackCollisionB->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	AttackCollisionB->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 	AttackCollisionB->SetCollisionResponseToChannel(ECollisionChannel::ECC_Destructible, ECollisionResponse::ECR_Overlap);
+	AttackCollisionB->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 
 
 	// Mesh Collision tracing channel Configuration
-	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
+	// Make capsule component ignore ECC_Camera collision channel
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
 
 	RadarPoint->SetRelativeScale3D(FVector((2.f / 34.f) * GetCapsuleComponent()->GetUnscaledCapsuleRadius()));
 

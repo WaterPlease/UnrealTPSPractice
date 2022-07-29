@@ -17,11 +17,13 @@ class TOPVIEWPRACTICE_API APlayerCharacterController : public APlayerController
 public:
 	APlayerCharacterController();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI | Screen")
 	TSubclassOf<UUserWidget> InGameScreenWidgetAsset;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Screen")
 	UUserWidget* InGameScreenWidget;
+
+	class AInGameHUD* InGameHUD;
 
 protected:
 	virtual void BeginPlay() override;
@@ -29,6 +31,6 @@ protected:
 
 private:
 	class APlayerCharacter* Player;
-	
+
 	APlayerCharacter* GetPlayer();
 };

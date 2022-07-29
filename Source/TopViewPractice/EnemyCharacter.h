@@ -6,17 +6,6 @@
 #include "GameFramework/Character.h"
 #include "EnemyCharacter.generated.h"
 
-enum EBodypart : uint8
-{
-	Head = 0,
-	Hand_L = 1,
-	LowArm_L = 2,
-	UpArm_L = 3,
-	Hand_L = 4,
-	LowArm_L = 5,
-	UpArm_L = 6,
-};
-
 UENUM()
 enum class EEnemyActionState : uint8
 {
@@ -70,8 +59,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy | UI")
 	class UStaticMeshComponent* RadarPoint;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Combat")
-	class UCapsuleComponent* Bodyparts[15];
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Combat")
+	//class UCapsuleComponent* Bodyparts[15];
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

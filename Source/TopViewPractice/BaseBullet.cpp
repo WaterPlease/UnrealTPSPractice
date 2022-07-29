@@ -4,6 +4,10 @@
 #include "BaseBullet.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "EnemyCharacter.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
+#include "PlayerCharacter.h"
 
 // Sets default values
 ABaseBullet::ABaseBullet()
@@ -38,7 +42,7 @@ void ABaseBullet::BeginPlay()
 	BulletHead->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	BulletHead->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	//BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
 	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Ignore);
 	BulletHead->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
@@ -90,6 +94,23 @@ void ABaseBullet::OnBulletHeadHit(UPrimitiveComponent* HitComponent, AActor* Oth
 {
 	// Spawn decal
 	// ...
+
+	AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor);
+	if (Enemy && bShotByPlayer)
+	{
+		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(Shooter);
+		PlayerCharacter->ShowHitmarker();
+	}
+
+	
+	UGameplayStatics::ApplyDamage(
+		OtherActor,
+		Damage,
+		Instigator,
+		Shooter,
+		DamageType
+	);
+
 
 	// Bounce
 	if (!RemainBounce)

@@ -26,6 +26,8 @@ public:
 	/**
 	* Parameters
 	*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet | stats")
+	TSubclassOf<UDamageType> DamageType;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Bullet | stats")
 	float LifeTime;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet | stats")
@@ -33,7 +35,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet | stats")
 	uint8 RemainBounce;
 
+	float Damage;
+
 	AActor* Shooter;
+	class AController* Instigator;
+
+	bool bShotByPlayer;
 
 	FTimerHandle DestroyTimerHandle;
 
