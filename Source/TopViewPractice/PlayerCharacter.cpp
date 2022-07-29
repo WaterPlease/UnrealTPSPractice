@@ -798,12 +798,6 @@ void APlayerCharacter::UpdateCurosorTransform()
 			ECollisionChannel::ECC_GameTraceChannel1
 		);
 		FVector MuzzleLocation = WeaponMeshComponent->GetSocketLocation(FName("MuzzleSocket"));
-		DrawDebugLine(
-			GetWorld(),
-			MuzzleLocation,
-			GetCameraComponent()->GetComponentLocation() + CursorLineTraceDistance * GetCameraComponent()->GetForwardVector(),
-			FColor::Red
-		);
 		//if (PlayerController->GetHitResultAtScreenPosition(FVector2D(point.X / 2, point.Y / 2), ECollisionChannel::ECC_Visibility, true, HitResult))
 		if (bCanAim)
 		{
@@ -818,6 +812,7 @@ void APlayerCharacter::UpdateCurosorTransform()
 		}
 		else
 		{
+			CursorLocation = GetCameraComponent()->GetComponentLocation() + CursorLineTraceDistance * GetCameraComponent()->GetForwardVector();
 			bCanAim = false;
 		}
 	}
