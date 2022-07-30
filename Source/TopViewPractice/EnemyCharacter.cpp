@@ -14,6 +14,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "PlayerCharacterController.h"
 
 
 // Sets default values
@@ -50,6 +51,11 @@ AEnemyCharacter::AEnemyCharacter()
 	);
 	RadarPoint->SetMaterial(0, RadarPointMaterial.Object);
 	RadarPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 1000.f));
+
+	Score = 100.f;
+	MaxHealth = 100.f;
+	Health = MaxHealth;
+	Damage = 10.f;
 
 	EnemyActionState = EEnemyActionState::EEA_Idle;
 	bCanAttack = false;
@@ -117,7 +123,7 @@ void AEnemyCharacter::BeginPlay()
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
 
 	RadarPoint->SetRelativeScale3D(FVector((2.f / 34.f) * GetCapsuleComponent()->GetUnscaledCapsuleRadius()));
-
+	RadarPoint->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called every frame
@@ -148,6 +154,8 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			}
 		}
 	case EEnemyActionState::EEA_Attack:
+		break;
+	case EEnemyActionState::EEA_Die:
 		break;
 	default:
 		break;
@@ -182,7 +190,16 @@ void AEnemyCharacter::AttackCollisionBeginOverlap(UPrimitiveComponent* Overlappe
 		if(!Cast<APlayerCharacter>(OtherActor)) return;
 
 		// Apply damage to player
-		// ...
+		if (GetPlayerCharacter())
+		{
+			UGameplayStatics::ApplyDamage(
+				PlayerCharacter,
+				Damage,
+				GetController(),
+				this,
+				DamageType
+			);
+		}
 		return;
 	}
 	
@@ -234,6 +251,31 @@ void AEnemyCharacter::AttackDone()
 	EnemyActionState = EEnemyActionState::EEA_Idle;
 	UE_LOG(LogTemp, Warning, TEXT("AttackDone"));
 	GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AEnemyCharacter::WaitAttackDone, AttackDelay);
+}
+
+float AEnemyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (DamageHistory.Contains(DamageCauser))
+		return DamageAmount;
+
+	DamageHistory.Add(DamageCauser);
+	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(EventInstigator);
+	if (EventInstigator)
+	{
+		if (GetPlayerCharacter() && EnemyActionState != EEnemyActionState::EEA_Die)
+		{
+			PlayerCharacter->ShowHitmarker();
+		}
+	}
+
+	Health -= DamageAmount;
+	if (Health < 0.f || FMath::IsNearlyZero(Health))
+	{
+		Die();
+	}
+	return DamageAmount;
 }
 
 APlayerCharacter* AEnemyCharacter::GetPlayerCharacter()
@@ -304,4 +346,27 @@ void AEnemyCharacter::Attack()
 
 		AIController->StopMovement();
 	}
+}
+
+void AEnemyCharacter::Die()
+{
+	EnemyActionState = EEnemyActionState::EEA_Die;
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_EngineTraceChannel1, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+
+	AIController->StopMovement();
+
+	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PlayerController)
+		PlayerController->EnemyKill(this);
+
+	GetWorldTimerManager().SetTimer(DeadTimer, this, &AEnemyCharacter::DieDone, 5.f);
+}
+
+void AEnemyCharacter::DieDone()
+{
+	Destroy();
 }

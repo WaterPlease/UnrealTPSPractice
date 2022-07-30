@@ -95,21 +95,45 @@ void ABaseBullet::OnBulletHeadHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	// Spawn decal
 	// ...
 
+	/*
 	AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor);
 	if (Enemy && bShotByPlayer)
 	{
-		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(Shooter);
-		PlayerCharacter->ShowHitmarker();
+		if (Enemy->EnemyActionState != EEnemyActionState::EEA_Die)
+		{
+			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(Shooter);
+			PlayerCharacter->ShowHitmarker();
+		}
+	}
+	*/
+
+	// Add impulse to non character
+	ACharacter* Character = Cast<ACharacter>(OtherActor);
+	if (!Character && OtherActor)
+	{
+		auto HitActorComponent = OtherActor->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		if (HitActorComponent)
+		{
+			UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(HitActorComponent);
+			if (MeshComponent &&
+				MeshComponent->Mobility == EComponentMobility::Movable)
+			{
+				MeshComponent->AddImpulse(10 * Damage * GetVelocity().GetSafeNormal(), NAME_None, true);
+			}
+		}
 	}
 
-	
-	UGameplayStatics::ApplyDamage(
-		OtherActor,
-		Damage,
-		Instigator,
-		Shooter,
-		DamageType
-	);
+	// Apply Damage
+	if (Shooter != OtherActor)
+	{
+		UGameplayStatics::ApplyDamage(
+			OtherActor,
+			Damage,
+			Instigator,
+			this,
+			DamageType
+		);
+	}
 
 
 	// Bounce

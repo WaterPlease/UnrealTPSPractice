@@ -12,7 +12,7 @@ enum class EEnemyActionState : uint8
 	EEA_Idle UMETA(DisplayName = "Idle"),
 	EEA_Chase UMETA(DisplayName = "Chase"),
 	EEA_Attack UMETA(DisplayName = "Attack"),
-
+	EEA_Die UMETA(DisplayName = "Die"),
 
 	EEA_MAX UMETA(DisplayName="DefaultMax")
 };
@@ -26,6 +26,16 @@ public:
 	// Sets default values for this character's properties
 	AEnemyCharacter();
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Stats")
+	float Score;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Stats")
+	float MaxHealth;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy | Stats")
+	float Health;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Stats")
+	float Damage;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Stats")
+	TSubclassOf<UDamageType> DamageType;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy | AI")
 	class AAIController* AIController;
@@ -100,6 +110,8 @@ public:
 
 	void WaitAttackDone() { bWaitAttack = false; }
 
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
 private:
 	APlayerCharacter* PlayerCharacter;
 
@@ -112,7 +124,13 @@ private:
 	void ChasePlayer();
 	void Attack();
 
+	void Die();
+	void DieDone();
+
 	bool bTryLookAt;
 
+	TSet<AActor*> DamageHistory;
+
 	FTimerHandle AttackTimerHandle;
+	FTimerHandle DeadTimer;
 };
