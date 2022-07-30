@@ -8,6 +8,7 @@
 #include "GameFramework/GameUserSettings.h"
 #include "InGameHUD.h"
 #include "Camera/CameraComponent.h"
+#include "EnemyCharacter.h"
 
 APlayerCharacterController::APlayerCharacterController()
 {
@@ -64,3 +65,17 @@ APlayerCharacter* APlayerCharacterController::GetPlayer()
 
 	return Player;
 }
+
+void APlayerCharacterController::AddScore(int ScoreAmount)
+{
+	Score += ScoreAmount;
+}
+
+void APlayerCharacterController::EnemyKill(const AEnemyCharacter* const Enemy)
+{
+	if (!Enemy) return;
+
+	AddScore(Enemy->Score);
+}
+
+

@@ -76,6 +76,10 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | UI")
 	class USoundCue* HitSoundCue;
+
+	/** Grenade Type */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	TSubclassOf<class ABaseGrenade> GrenadeType;
 	
 	/** Animation Montage for Character's Action*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
@@ -103,7 +107,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
 	bool bCameraRotationInput;
 
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
+	bool bLMBLook;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
 	bool bMuzzleUp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
@@ -144,6 +149,10 @@ public:
 	uint8 RoundCapacity;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Stats")
 	uint8 RoundRemain;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Stats")
+	uint8 GrenadeRemain;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Stats")
+	float ThrowSpeed;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
 	float Spread;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
@@ -317,6 +326,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DiveDone();
 
+	UFUNCTION(BlueprintCallable)
+	void SpawnGrenade();
+
 	void EquipWeapon(class AWeapon* Weapon);
 	void Die();
 
@@ -328,6 +340,8 @@ public:
 
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	void SetHealable();
 
 	void ShowHitmarker();
 	void HideHitmarker();
@@ -365,6 +379,8 @@ private:
 	FTimerHandle HitmarkerTimerHandle;
 	FTimerHandle CursorResetTimerHandle;
 	FTimerHandle RecoilResetTimerHandle;
+	FTimerHandle LMBLookTimerHandle;
+	FTimerHandle HealTimerHandle;
 	TArray<AActor*> MuzzleColliderArray;
 
 	FRotator CombatUIRotation;
@@ -378,4 +394,7 @@ private:
 	void RestorCharacterSpeed();
 
 	void Fire();
+	void ThrowGrenade();
+	
+	void ResetLMBLook();
 };

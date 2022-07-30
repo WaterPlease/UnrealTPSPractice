@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/DecalComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/WidgetComponent.h"
@@ -24,6 +25,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Math/UnrealMathUtility.h"
+#include "BaseGrenade.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -100,6 +102,7 @@ APlayerCharacter::APlayerCharacter()
 	bTryFire = false;
 	bCanAim = false;
 	bHeal = true;
+	bLMBLook = false;
 
 	PlayerActionState = EPlayerActionState::EPA_Idle;
 
@@ -117,6 +120,8 @@ APlayerCharacter::APlayerCharacter()
 	GunRPMMultiplier = 1.f;
 	RoundCapacity = 30;
 	RoundRemain = 31;
+	GrenadeRemain = 0;
+	ThrowSpeed = 1600.f;
 	Spread = 0.f;
 	BaseMinSpread = 0.f;
 	BaseMaxSpread = 0.f;
@@ -127,7 +132,7 @@ APlayerCharacter::APlayerCharacter()
 	MaxHealth = 100.f;
 	Health = 100.f;
 	HealthRegenRate = 10.f;
-	HealthRegenDelay = 10.f;
+	HealthRegenDelay = 5.f;
 	MaxStamina = 100.f;
 	Stamina = 100.f;
 	StaminaRegenRate = 20.f;
@@ -187,6 +192,8 @@ void APlayerCharacter::BeginPlay()
 	CombatUIRotation = CombatUIIdleRotation;
 
 	Spread = BaseMinSpread;
+
+	GrenadeRemain = 1;
 }
 
 // Called every frame
@@ -384,6 +391,7 @@ void APlayerCharacter::LMBDown()
 {
 	bLMBInput = true;
 	bTryFire = true;
+	bLMBLook = true;
 	Fire();
 }
 
@@ -391,6 +399,8 @@ void APlayerCharacter::LMBUp()
 {
 	bLMBInput = false;
 	bTryFire = false;
+	GetWorldTimerManager().ClearTimer(LMBLookTimerHandle);
+	GetWorldTimerManager().SetTimer(LMBLookTimerHandle, this, &APlayerCharacter::ResetLMBLook, 2.0f);
 }
 
 void APlayerCharacter::RMBDown()
@@ -468,16 +478,10 @@ void APlayerCharacter::GrenadeDown()
 {
 	bGrenadeInput = true;
 
-	if (PlayerActionState != EPlayerActionState::EPA_Idle) return;
+	ThrowGrenade();
 
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance)
-	{
-		PlayerActionState = EPlayerActionState::EPA_Throwing;
-
-		AnimInstance->Montage_Play(FireMontage, 1.f);
-		AnimInstance->Montage_JumpToSection(FName("Throw_Grenade"), FireMontage);
-	}
+	bLMBLook = true;
+	GetWorldTimerManager().SetTimer(LMBLookTimerHandle, this, &APlayerCharacter::ResetLMBLook, 3.0f);
 }
 
 void APlayerCharacter::GrenadeUp()
@@ -612,6 +616,30 @@ void APlayerCharacter::DiveDone()
 	RestorCharacterSpeed();
 }
 
+void APlayerCharacter::SpawnGrenade()
+{
+	FVector LeftHandLocation = GetMesh()->GetSocketLocation("LeftHandSocket");
+
+	ABaseGrenade* Grenade = GetWorld()->SpawnActor<ABaseGrenade>(GrenadeType,
+		LeftHandLocation,
+		FMath::VRand().Rotation());
+
+	if (!Grenade)
+	{
+		// Failed to spawn grenade
+		return;
+	}
+
+	GrenadeRemain -= 1;
+
+	Grenade->Sphere->SetAllPhysicsLinearVelocity(
+		ThrowSpeed * (CursorLocation - LeftHandLocation).GetSafeNormal()
+	);
+	Grenade->Sphere->SetAllPhysicsAngularVelocityInDegrees(
+		FMath::VRand() * 720.f
+	);
+}
+
 // Equip Weapon
 void APlayerCharacter::EquipWeapon(AWeapon* Weapon)
 {
@@ -688,12 +716,22 @@ void APlayerCharacter::OnMuzzleTriggerOverlapEnd(UPrimitiveComponent* Overlapped
 float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float EffectiveDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	Health -= EffectiveDamage;
+	bHeal = false;
+	Health -= EffectiveDamage; 
 	if (Health < 0.f)
 	{
 		Die();
 	}
+	else
+	{
+		GetWorldTimerManager().SetTimer(HealTimerHandle, this, &APlayerCharacter::SetHealable, HealthRegenDelay);
+	}
 	return EffectiveDamage;
+}
+
+void APlayerCharacter::SetHealable()
+{
+	bHeal = true;
 }
 
 void APlayerCharacter::ShowHitmarker()
@@ -747,7 +785,7 @@ void APlayerCharacter::UpdateCharacterLook()
 
 		FVector LookVector;
 		//	UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), CursorLocation);
-		if (bRMBInput || bLMBInput)
+		if (bRMBInput || bLMBLook)
 		{
 			LookVector = CursorLocation - GetActorLocation();//FrontVector;
 		}
@@ -816,6 +854,23 @@ void APlayerCharacter::UpdateCurosorTransform()
 			bCanAim = false;
 		}
 	}
+}
+
+// Restore character's speed
+// It can be used right after some action that affects character's speed.
+void APlayerCharacter::RestorCharacterSpeed()
+{
+	if (PlayerActionState == EPlayerActionState::EPA_Diving) return;
+	if (bRunning)
+		TargetSpeed = RunSpeed;
+	else
+		TargetSpeed = WalkSpeed;
+
+	if (bRMBInput)
+		TargetSpeed = ADSSpeed;
+
+	if (bCrouch)
+		TargetSpeed *= 0.5f;
 }
 
 // Fire weapon and play fire animation of player character
@@ -904,7 +959,7 @@ void APlayerCharacter::Fire()
 		// Spread Increase
 		Spread = FMath::FInterpTo(
 			Spread,
-			BaseMaxSpread,
+			BaseMaxSpread * ((bRMBInput) ? 1.0f:2.0f),
 			FireIntervalTime,
 			BaseSpreadIncreaseSpeed
 		);
@@ -931,19 +986,27 @@ void APlayerCharacter::Fire()
 	}
 }
 
-// Restore character's speed
-// It can be used right after some action that affects character's speed.
-void APlayerCharacter::RestorCharacterSpeed()
+void APlayerCharacter::ThrowGrenade()
 {
-	if (PlayerActionState == EPlayerActionState::EPA_Diving) return;
-	if (bRunning)
-		TargetSpeed = RunSpeed;
-	else
-		TargetSpeed = WalkSpeed;
+	if (GrenadeRemain == 0)
+	{
+		// Say No Grenade
+		return;
+	}
+	if (PlayerActionState != EPlayerActionState::EPA_Idle) return;
 
-	if (bRMBInput)
-		TargetSpeed = ADSSpeed;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		PlayerActionState = EPlayerActionState::EPA_Throwing;
 
-	if (bCrouch)
-		TargetSpeed *= 0.5f;
+		AnimInstance->Montage_Play(FireMontage, 1.f);
+		AnimInstance->Montage_JumpToSection(FName("Throw_Grenade"), FireMontage);
+	}
+}
+
+void APlayerCharacter::ResetLMBLook()
+{
+	if (!bLMBInput)
+		bLMBLook = false;
 }

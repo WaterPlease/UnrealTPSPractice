@@ -23,6 +23,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Screen")
 	UUserWidget* InGameScreenWidget;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Data")
+	int Score;
+
+
 	class AInGameHUD* InGameHUD;
 
 protected:
@@ -32,5 +36,12 @@ protected:
 private:
 	class APlayerCharacter* Player;
 
+public:
 	APlayerCharacter* GetPlayer();
+
+	UFUNCTION(BlueprintCallable)
+	void AddScore(int ScoreAmount);
+
+	UFUNCTION(BlueprintCallable)
+	void EnemyKill(const class AEnemyCharacter* const Enemy);
 };
