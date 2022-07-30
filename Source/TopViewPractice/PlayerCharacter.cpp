@@ -96,6 +96,7 @@ APlayerCharacter::APlayerCharacter()
 	bCrouchInput = false;
 	bInteractionInput = false;
 	bDodgeInput = false;
+	bCameraSideInput = false;
 	bMuzzleUp = false;
 	bRunning = false;
 	bCrouch = false;
@@ -194,6 +195,8 @@ void APlayerCharacter::BeginPlay()
 	Spread = BaseMinSpread;
 
 	GrenadeRemain = 1;
+
+	CameraRelativeLocation = GetCameraComponent()->GetRelativeLocation();
 }
 
 // Called every frame
@@ -271,6 +274,15 @@ void APlayerCharacter::Tick(float DeltaTime)
 		GetCharacterMovement()->MaxWalkSpeedCrouched = TempSpeed * 0.5f;
 	}
 
+	float TempLocationY = GetCameraComponent()->GetRelativeLocation().Y;
+	if (!FMath::IsNearlyEqual(TempLocationY,CameraRelativeLocation.Y))
+	{
+		TempLocationY = FMath::FInterpTo(TempLocationY, CameraRelativeLocation.Y, DeltaTime, CameraBoom->CameraLagSpeed);
+		FVector RelativeLocation = CameraRelativeLocation;
+		RelativeLocation.Y = TempLocationY;
+		GetCameraComponent()->SetRelativeLocation(RelativeLocation);
+	}
+
 	// Smooth Combat UI Rotation
 	FRotator CurrentUIRotation = CombatUI->GetRelativeRotation();
 	if (!CurrentUIRotation.Equals(CombatUIRotation))
@@ -332,6 +344,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction(TEXT("CameraRotation"), EInputEvent::IE_Pressed, this, &APlayerCharacter::CameraRotationDown);
 	PlayerInputComponent->BindAction(TEXT("CameraRotation"), EInputEvent::IE_Released, this, &APlayerCharacter::CameraRotationUp);
 
+	PlayerInputComponent->BindAction(TEXT("CameraSide"), EInputEvent::IE_Pressed, this, &APlayerCharacter::CameraSideDown);
+	PlayerInputComponent->BindAction(TEXT("CameraSide"), EInputEvent::IE_Released, this, &APlayerCharacter::CameraSideUp);
+
 	PlayerInputComponent->BindAxis(TEXT("Horizontal"), this, &APlayerCharacter::InputHorizontal);
 	PlayerInputComponent->BindAxis(TEXT("Vertical"), this, &APlayerCharacter::InputVertical);
 
@@ -343,7 +358,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 // Vertical movement input handler
 void APlayerCharacter::InputVertical(float Value)
 {
-	if (CanMove())
+	if (!FMath::IsNearlyZero(Value) && CanMove())
 	{
 		FVector FrontVector = GetCameraComponent()->GetForwardVector();
 		FrontVector.Z = 0.f;
@@ -355,7 +370,7 @@ void APlayerCharacter::InputVertical(float Value)
 // Vertical movement input handler
 void APlayerCharacter::InputHorizontal(float Value)
 {
-	if (CanMove())
+	if (!FMath::IsNearlyZero(Value) && CanMove())
 	{
 		FVector RightVector = GetCameraComponent()->GetRightVector();
 		RightVector.Z = 0.f;
@@ -378,12 +393,14 @@ void APlayerCharacter::Zoom(float Value)
 // Horizontal turn (mouse drag) input handler
 void APlayerCharacter::HorizontalTurn(float Value)
 {
-	CamRotation.Yaw += Value * CameraSensitivity;
+	if (!FMath::IsNearlyZero(Value))
+		CamRotation.Yaw += Value * CameraSensitivity;
 }
 
 // Horizontal turn (mouse drag) input handler
 void APlayerCharacter::VerticalTurn(float Value)
 {
+	if (!FMath::IsNearlyZero(Value))
 	CamRotation.Pitch += Value * CameraSensitivity;
 }
 
@@ -592,6 +609,19 @@ void APlayerCharacter::CameraRotationDown()
 void APlayerCharacter::CameraRotationUp()
 {
 	bCameraRotationInput = false;
+}
+
+void APlayerCharacter::CameraSideDown()
+{
+	bCameraSideInput = true;
+
+	CameraRelativeLocation = GetCameraComponent()->GetRelativeLocation();
+	CameraRelativeLocation.Y *= -1.f;
+}
+
+void APlayerCharacter::CameraSideUp()
+{
+	bCameraSideInput = false;
 }
 
 bool APlayerCharacter::CanMove()

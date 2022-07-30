@@ -7,6 +7,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 ABaseGrenade::ABaseGrenade()
@@ -108,6 +109,11 @@ void ABaseGrenade::Detonate()
 		FRotator ParticleRotator = FRotator::ZeroRotator;
 		ParticleRotator.Yaw = FMath::FRandRange(-180.f, 180.f);
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DetonationParticle, GetActorLocation(), ParticleRotator, FVector(1.f));
+	}
+
+	if (ExplosionSoundCue)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSoundCue, GetActorLocation());
 	}
 
 	Destroy();

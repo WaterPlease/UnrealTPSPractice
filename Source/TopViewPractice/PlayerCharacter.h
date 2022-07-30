@@ -106,6 +106,8 @@ public:
 	bool bInteractionInput;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
 	bool bCameraRotationInput;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
+	bool bCameraSideInput;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
 	bool bLMBLook;
@@ -315,6 +317,11 @@ public:
 	UFUNCTION()
 	void CameraRotationUp();
 
+	UFUNCTION()
+	void CameraSideDown();
+	UFUNCTION()
+	void CameraSideUp();
+
 	/**
 	* User Function Declaration
 	*/
@@ -371,6 +378,7 @@ private:
 	FRotator DiveRotation;
 
 	FVector DiveDirection;
+	FVector CameraRelativeLocation;
 
 	float TempCameraDistance;
 	float TimeAfterShot;

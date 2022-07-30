@@ -29,6 +29,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Grenade")
 	class UParticleSystem* DetonationParticle;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Grenade")
+	class USoundCue* ExplosionSoundCue;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Grenade")
 	float DetonationDelay;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Grenade")
 	float Damage;
