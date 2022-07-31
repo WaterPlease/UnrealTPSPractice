@@ -9,10 +9,11 @@
 #include "InGameHUD.h"
 #include "Camera/CameraComponent.h"
 #include "EnemyCharacter.h"
+#include "ScoringBox.h"
 
 APlayerCharacterController::APlayerCharacterController()
 {
-
+	AddedScore = 0;
 }
 
 void APlayerCharacterController::BeginPlay()
@@ -69,6 +70,15 @@ APlayerCharacter* APlayerCharacterController::GetPlayer()
 void APlayerCharacterController::AddScore(int ScoreAmount)
 {
 	Score += ScoreAmount;
+
+	if (WidgetScoreBox)
+	{
+		AddedScore += ScoreAmount;
+		WidgetScoreBox->SetAddedScore(AddedScore);
+		WidgetScoreBox->PlayScoreingBeginAnimation();
+		GetWorldTimerManager().ClearTimer(ScoringResetTimerHandle);
+		GetWorldTimerManager().SetTimer(ScoringResetTimerHandle, this, &APlayerCharacterController::ScoringReset, 5.f);
+	}
 }
 
 void APlayerCharacterController::EnemyKill(const AEnemyCharacter* const Enemy)
@@ -79,3 +89,8 @@ void APlayerCharacterController::EnemyKill(const AEnemyCharacter* const Enemy)
 }
 
 
+void APlayerCharacterController::ScoringReset()
+{
+	AddedScore = 0;
+	WidgetScoreBox->PlayScoreingEndAnimation();
+}

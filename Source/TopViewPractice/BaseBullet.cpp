@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "PlayerCharacter.h"
+#include "Particles/ParticleSystem.h"
 
 // Sets default values
 ABaseBullet::ABaseBullet()
@@ -121,6 +122,19 @@ void ABaseBullet::OnBulletHeadHit(UPrimitiveComponent* HitComponent, AActor* Oth
 				MeshComponent->AddImpulse(10 * Damage * GetVelocity().GetSafeNormal(), NAME_None, true);
 			}
 		}
+
+		// Spawn smoke particle
+		FRotator HitRotation = FRotator::ZeroRotator;
+		HitRotation.Roll = FMath::RadiansToDegrees(FMath::Atan2(Hit.ImpactNormal.Y, Hit.ImpactNormal.Z));
+		HitRotation.Pitch = -FMath::RadiansToDegrees(FMath::Atan2(Hit.ImpactNormal.X, Hit.ImpactNormal.Z));
+
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			SmokeParticleSystem,
+			Hit.ImpactPoint,
+			HitRotation,
+			FVector(0.1f)
+		);
 	}
 
 	// Apply Damage

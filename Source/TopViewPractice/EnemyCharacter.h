@@ -112,6 +112,7 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	class ASpawnManager* SpawnManager;
 private:
 	APlayerCharacter* PlayerCharacter;
 

@@ -547,6 +547,7 @@ void APlayerCharacter::DodgeDown()
 	bDodgeInput = true;
 
 	if (PlayerActionState == EPlayerActionState::EPA_Diving ||
+		PlayerActionState == EPlayerActionState::EPA_Throwing ||
 		GetCharacterMovement()->IsFalling() ||
 		Stamina < DodgeStamina) return;
 	Stamina -= DodgeStamina;
@@ -648,7 +649,7 @@ void APlayerCharacter::DiveDone()
 
 void APlayerCharacter::SpawnGrenade()
 {
-	FVector LeftHandLocation = GetMesh()->GetSocketLocation("LeftHandSocket");
+	FVector LeftHandLocation = GetMesh()->GetSocketLocation("RightHandSocket");
 
 	ABaseGrenade* Grenade = GetWorld()->SpawnActor<ABaseGrenade>(GrenadeType,
 		LeftHandLocation,
@@ -1032,6 +1033,9 @@ void APlayerCharacter::ThrowGrenade()
 
 		AnimInstance->Montage_Play(FireMontage, 1.f);
 		AnimInstance->Montage_JumpToSection(FName("Throw_Grenade"), FireMontage);
+
+		WeaponMeshComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		WeaponMeshComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform, FName("LeftHandSocket"));
 	}
 }
 
