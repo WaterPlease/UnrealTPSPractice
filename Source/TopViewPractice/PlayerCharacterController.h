@@ -23,6 +23,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Screen")
 	UUserWidget* InGameScreenWidget;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "UI | Screen")
+	class UScoringBox* WidgetScoreBox;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Data")
 	int Score;
 
@@ -35,6 +38,12 @@ protected:
 
 private:
 	class APlayerCharacter* Player;
+
+	int AddedScore;
+
+	FTimerHandle ScoringResetTimerHandle;
+	UFUNCTION()
+	void ScoringReset();
 
 public:
 	APlayerCharacter* GetPlayer();

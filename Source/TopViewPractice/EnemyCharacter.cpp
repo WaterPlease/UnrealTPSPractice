@@ -15,6 +15,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayerCharacterController.h"
+#include "SpawnManager.h"
 
 
 // Sets default values
@@ -72,6 +73,9 @@ AEnemyCharacter::AEnemyCharacter()
 	AttackDelay = 1.5f;
 
 	NumAttackType = 1;
+
+	// Let Ai Controll this character
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 // Called when the game starts or when spawned
@@ -350,6 +354,8 @@ void AEnemyCharacter::Attack()
 
 void AEnemyCharacter::Die()
 {
+	if (EnemyActionState == EEnemyActionState::EEA_Die) return;
+
 	EnemyActionState = EEnemyActionState::EEA_Die;
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
@@ -362,6 +368,9 @@ void AEnemyCharacter::Die()
 	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	if (PlayerController)
 		PlayerController->EnemyKill(this);
+
+	if (SpawnManager)
+		SpawnManager->DecreaseNumOfEnemy();
 
 	GetWorldTimerManager().SetTimer(DeadTimer, this, &AEnemyCharacter::DieDone, 5.f);
 }

@@ -35,6 +35,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet | stats")
 	uint8 RemainBounce;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet | Effect")
+	class UParticleSystem* SmokeParticleSystem;
+
 	float Damage;
 
 	AActor* Shooter;
