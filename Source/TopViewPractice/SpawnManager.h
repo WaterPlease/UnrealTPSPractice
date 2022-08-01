@@ -24,8 +24,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn | Volume")
 	TArray<class ASpawnVolume*> SpawnVolumes;
 	
-	FORCEINLINE void IncreaseNumOfEnemy() { NumOfEnemy += 1; }
-	FORCEINLINE void DecreaseNumOfEnemy() { NumOfEnemy -= 1; }
+	void IncreaseNumOfEnemy();
+	void DecreaseNumOfEnemy();
 
 protected:
 	// Called when the game starts or when spawned

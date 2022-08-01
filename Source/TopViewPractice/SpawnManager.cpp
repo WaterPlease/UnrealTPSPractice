@@ -15,6 +15,15 @@ ASpawnManager::ASpawnManager()
 	PrimaryActorTick.TickInterval = 3.f;
 }
 
+void ASpawnManager::IncreaseNumOfEnemy()
+{ 
+	NumOfEnemy += 1;
+}
+void ASpawnManager::DecreaseNumOfEnemy() 
+{ 
+	NumOfEnemy = FMath::Max(0, NumOfEnemy - 1);
+}
+
 // Called when the game starts or when spawned
 void ASpawnManager::BeginPlay()
 {

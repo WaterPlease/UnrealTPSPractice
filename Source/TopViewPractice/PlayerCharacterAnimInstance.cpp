@@ -70,15 +70,18 @@ void UPlayerCharacterAnimInstance::UpdateProperties()
 		bRunning = PlayerCharacter->bRunning;
 		bCrouch = PlayerCharacter->bCrouch;
 		bFalling = PlayerCharacter->GetCharacterMovement()->IsFalling();
-
+		
+		
+		ADSSpinePitch = FMath::FInterpTo(
+			ADSSpinePitch,
+			PlayerCharacter->SpinePitch,
+			GetWorld()->DeltaTimeSeconds,
+			PlayerCharacter->CharacterAimTurnSpeed
+		);
+		/*
 		if (bADS || bTryFire)
 		{
-			ADSSpinePitch = FMath::FInterpTo(
-				ADSSpinePitch,
-				PlayerCharacter->SpinePitch,
-				GetWorld()->DeltaTimeSeconds,
-				PlayerCharacter->CharacterAimTurnSpeed
-				);
+			
 		}
 		else
 		{
@@ -89,6 +92,7 @@ void UPlayerCharacterAnimInstance::UpdateProperties()
 				PlayerCharacter->CharacterAimTurnSpeed
 				);
 		}
+		*/
 
 		CapsuleLocation = PlayerCharacter->GetCapsuleComponent()->GetComponentLocation();
 		

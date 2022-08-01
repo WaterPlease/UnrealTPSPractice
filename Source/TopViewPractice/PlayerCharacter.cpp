@@ -234,17 +234,21 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 
 	// Get Pithch angle of spine to make character aim to cursor
-	if ((bRMBInput || bTryFire) && bCanAim)
+	if ((bRMBInput || bTryFire || bLMBLook) && bCanAim)
 	{
 		FVector NeckToCursor = GetMesh()->GetSocketLocation("Neck") - CursorLocation;
 		float DistOnXY = FMath::Sqrt(NeckToCursor.X * NeckToCursor.X + NeckToCursor.Y * NeckToCursor.Y);
 		SpinePitch = FMath::RadiansToDegrees(FMath::Atan2(NeckToCursor.Z, DistOnXY));
 	}	
-	else if (bRMBInput || bTryFire)
+	else if (bRMBInput || bTryFire || bLMBLook)
 	{
 		FVector FrontVector = -GetCameraComponent()->GetForwardVector();
 		float DistOnXY = FMath::Sqrt(FrontVector.X * FrontVector.X + FrontVector.Y * FrontVector.Y);
 		SpinePitch = FMath::RadiansToDegrees(FMath::Atan2(FrontVector.Z, DistOnXY));
+	}
+	else
+	{
+		SpinePitch = 0.f;
 	}
 
 	// Camera rotaion

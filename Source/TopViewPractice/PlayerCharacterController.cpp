@@ -77,7 +77,7 @@ void APlayerCharacterController::AddScore(int ScoreAmount)
 		WidgetScoreBox->SetAddedScore(AddedScore);
 		WidgetScoreBox->PlayScoreingBeginAnimation();
 		GetWorldTimerManager().ClearTimer(ScoringResetTimerHandle);
-		GetWorldTimerManager().SetTimer(ScoringResetTimerHandle, this, &APlayerCharacterController::ScoringReset, 5.f);
+		GetWorldTimerManager().SetTimer(ScoringResetTimerHandle, this, &APlayerCharacterController::ScoringReset, 3.f);
 	}
 }
 

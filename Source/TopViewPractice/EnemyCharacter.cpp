@@ -373,6 +373,8 @@ void AEnemyCharacter::Die()
 		SpawnManager->DecreaseNumOfEnemy();
 
 	GetWorldTimerManager().SetTimer(DeadTimer, this, &AEnemyCharacter::DieDone, 5.f);
+
+	RadarPoint->SetWorldScale3D(FVector(0.f)); 
 }
 
 void AEnemyCharacter::DieDone()
