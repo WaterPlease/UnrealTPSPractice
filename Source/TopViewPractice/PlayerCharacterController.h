@@ -29,6 +29,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Data")
 	int Score;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Data")
+	int Round;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Data")
+	float RoundTimer;
+
 
 	class AInGameHUD* InGameHUD;
 
@@ -47,6 +53,8 @@ private:
 
 public:
 	APlayerCharacter* GetPlayer();
+
+	void NextRound(int _Round, float BreakTime);
 
 	UFUNCTION(BlueprintCallable)
 	void AddScore(int ScoreAmount);

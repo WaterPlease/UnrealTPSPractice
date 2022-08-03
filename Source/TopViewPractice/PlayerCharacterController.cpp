@@ -14,6 +14,9 @@
 APlayerCharacterController::APlayerCharacterController()
 {
 	AddedScore = 0;
+	Score = 0;
+	Round = 1;
+	RoundTimer = -1.f;
 }
 
 void APlayerCharacterController::BeginPlay()
@@ -55,6 +58,22 @@ void APlayerCharacterController::Tick(float DeltaTime)
 		InGameHUD->CrosshairLineOffset = ProjectedPosition.X * Result.X * 0.5f;
 		InGameHUD->CursorOffset = Player->CursorOffset;
 	}
+
+	if (RoundTimer > 0.f)
+	{
+		RoundTimer -= DeltaTime;
+
+		if (RoundTimer < 0.f || FMath::IsNearlyZero(RoundTimer))
+		{
+			RoundTimer = -1.f;
+		}
+	}
+}
+
+void APlayerCharacterController::ScoringReset()
+{
+	AddedScore = 0;
+	WidgetScoreBox->PlayScoreingEndAnimation();
 }
 
 APlayerCharacter* APlayerCharacterController::GetPlayer()
@@ -65,6 +84,12 @@ APlayerCharacter* APlayerCharacterController::GetPlayer()
 	}
 
 	return Player;
+}
+
+void APlayerCharacterController::NextRound(int _Round, float BreakTime)
+{
+	Round = _Round;
+	RoundTimer = BreakTime;
 }
 
 void APlayerCharacterController::AddScore(int ScoreAmount)
@@ -86,11 +111,4 @@ void APlayerCharacterController::EnemyKill(const AEnemyCharacter* const Enemy)
 	if (!Enemy) return;
 
 	AddScore(Enemy->Score);
-}
-
-
-void APlayerCharacterController::ScoringReset()
-{
-	AddedScore = 0;
-	WidgetScoreBox->PlayScoreingEndAnimation();
 }

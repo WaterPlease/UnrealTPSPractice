@@ -16,6 +16,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayerCharacterController.h"
 #include "SpawnManager.h"
+#include "Item.h"
 
 
 // Sets default values
@@ -370,7 +371,12 @@ void AEnemyCharacter::Die()
 		PlayerController->EnemyKill(this);
 
 	if (SpawnManager)
-		SpawnManager->DecreaseNumOfEnemy();
+	{
+		SpawnManager->AddKilledEnemy();
+
+		TSubclassOf<AItem> ItemClass = SpawnManager->SampleDropItem();
+		GetWorld()->SpawnActor<AItem>(ItemClass, GetActorLocation(), FRotator::ZeroRotator);
+	}
 
 	GetWorldTimerManager().SetTimer(DeadTimer, this, &AEnemyCharacter::DieDone, 5.f);
 

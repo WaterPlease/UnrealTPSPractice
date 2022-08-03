@@ -19,29 +19,51 @@ public:
 	int MaxNumOfEnemy;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn | Config")
+	float BreakTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn | Config")
 	TMap<TSubclassOf<class AEnemyCharacter>, float> SpawnList;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn | Config")
+	TMap<TSubclassOf<class AItem>, float> DropList;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn | Volume")
 	TArray<class ASpawnVolume*> SpawnVolumes;
 	
-	void IncreaseNumOfEnemy();
-	void DecreaseNumOfEnemy();
+	void NextRound();
 
+	void AddKilledEnemy();
+	TSubclassOf<AItem> SampleDropItem();
+
+	void StartSpawn();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
-	TArray<float> CDF;
-	void BuildCDF();
-	int SampleFromCDF();
+	TArray<float> SpawnCDF;
+	TArray<float> DropCDF;
+	
+	template<typename TCLASS>
+	void BuildCDF(const TMap<TSubclassOf<TCLASS>, float>& SelectList, TArray<float>& CDF, TArray<TSubclassOf<TCLASS>>& SelectKeyList);
 
-	TArray<TSubclassOf<class AEnemyCharacter>> SpawnKeyList;
+	int SampleFromCDF(const TArray<float>& CDF);
 
-	int NumOfEnemy;
+	bool bSpawn;
+
+	TArray<TSubclassOf<AEnemyCharacter>> SpawnKeyList;
+	TArray<TSubclassOf<AItem>> DropKeyList;
+
+	int SpawnedEnemy;
+	int KilledEnemy;
+	int Round;
+
+	FTimerHandle SpawnTimer;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 };
+
+

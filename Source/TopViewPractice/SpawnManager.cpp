@@ -1,10 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "SpawnManager.h"
 #include "SpawnVolume.h"
 #include "EnemyCharacter.h"
 #include "Algo/RandomShuffle.h"
+#include "Kismet/GameplayStatics.h"
+#include "PlayerCharacterController.h"
+#include "Item.h"
 
 // Sets default values
 ASpawnManager::ASpawnManager()
@@ -13,15 +14,42 @@ ASpawnManager::ASpawnManager()
 	PrimaryActorTick.bCanEverTick = true;
 
 	PrimaryActorTick.TickInterval = 3.f;
+
+	Round = 0;
+	bSpawn = false;
 }
 
-void ASpawnManager::IncreaseNumOfEnemy()
-{ 
-	NumOfEnemy += 1;
+void ASpawnManager::NextRound()
+{
+	Round += 1;
+	MaxNumOfEnemy += 1;
+
+	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerController(GetWorld(),0));
+
+	if (PlayerController)
+	{
+		PlayerController->NextRound(Round, BreakTime);
+	}
+	SpawnedEnemy = 0;
+	KilledEnemy = 0;
+	bSpawn = false;
+	GetWorldTimerManager().SetTimer(SpawnTimer, this, &ASpawnManager::StartSpawn, BreakTime);
 }
-void ASpawnManager::DecreaseNumOfEnemy() 
-{ 
-	NumOfEnemy = FMath::Max(0, NumOfEnemy - 1);
+
+void ASpawnManager::AddKilledEnemy()
+{
+	KilledEnemy++;
+}
+
+TSubclassOf<AItem> ASpawnManager::SampleDropItem()
+{
+	TSubclassOf<AItem> SampledItem = DropKeyList[SampleFromCDF(DropCDF)];
+	return SampledItem;
+}
+
+void ASpawnManager::StartSpawn()
+{
+	bSpawn = true;
 }
 
 // Called when the game starts or when spawned
@@ -34,29 +62,33 @@ void ASpawnManager::BeginPlay()
 		SpawnVolume->SpawnManager = this;
 	}
 
-	BuildCDF();
-	NumOfEnemy = 0;
+	BuildCDF(SpawnList,SpawnCDF, SpawnKeyList);
+	BuildCDF(DropList, DropCDF, DropKeyList);
+	NextRound();
 }
 
-void ASpawnManager::BuildCDF()
+template<typename TCLASS>
+void ASpawnManager::BuildCDF(const TMap<TSubclassOf<TCLASS>, float>& SelectList, TArray<float>& CDF, TArray<TSubclassOf<TCLASS>>& SelectKeyList)
 {
 	float CurrentProb = 0.f;
-	SpawnKeyList.Empty();
-	for (auto SpawnPair : SpawnList)
+	SelectKeyList.Empty();
+	for (auto SelectPair : SelectList)
 	{
-		CurrentProb += SpawnPair.Value;
-		SpawnKeyList.Add(SpawnPair.Key);
+		CurrentProb += SelectPair.Value;
+		SelectKeyList.Add(SelectPair.Key);
 		CDF.Add(CurrentProb);
 	}
 }
 
-int ASpawnManager::SampleFromCDF()
+int ASpawnManager::SampleFromCDF(const TArray<float>& CDF)
 {
 	float U = FMath::FRandRange(0.f, CDF.Last());
 	
 	uint32 Min = 0;
 	uint32 Max = CDF.Num()-1;
 	uint32 Cursor;
+
+	// binary search
 	while (Min < Max)
 	{
 		Cursor = (Min + Max) / 2;
@@ -81,16 +113,24 @@ void ASpawnManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	UE_LOG(LogTemp, Warning, TEXT("Enemy count check"));
-	Algo::RandomShuffle(SpawnVolumes);
-
-	int N = SpawnList.Num();
-	for (int i = 0; i < N && NumOfEnemy<MaxNumOfEnemy; i++)
+	if (bSpawn)
 	{
-		TSubclassOf<AEnemyCharacter> EnemyClass = SpawnKeyList[SampleFromCDF()];
-		if (SpawnVolumes[i]->SpawnEnemy(EnemyClass))
+		UE_LOG(LogTemp, Warning, TEXT("Enemy count check"));
+		Algo::RandomShuffle(SpawnVolumes);
+
+		int N = SpawnList.Num();
+		for (int i = 0; i < N && SpawnedEnemy < MaxNumOfEnemy; i++)
 		{
-			IncreaseNumOfEnemy();
+			TSubclassOf<AEnemyCharacter> EnemyClass = SpawnKeyList[SampleFromCDF(SpawnCDF)];
+			if (SpawnVolumes[i]->SpawnEnemy(EnemyClass))
+			{
+				SpawnedEnemy += 1;
+			}
+		}
+
+		if (KilledEnemy == MaxNumOfEnemy)
+		{
+			NextRound();
 		}
 	}
 }

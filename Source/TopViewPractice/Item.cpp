@@ -19,6 +19,7 @@ AItem::AItem()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(GetRootComponent());
+	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	ItemParticleSystem = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ItemParticleSystem"));
 	ItemParticleSystem->SetupAttachment(GetRootComponent());
