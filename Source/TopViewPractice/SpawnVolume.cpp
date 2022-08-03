@@ -16,12 +16,8 @@ ASpawnVolume::ASpawnVolume()
 bool ASpawnVolume::SpawnEnemy(const TSubclassOf<class AEnemyCharacter>& EnemyClass)
 {
 	AEnemyCharacter* Enemy = GetWorld()->SpawnActor<AEnemyCharacter>(EnemyClass, GetActorLocation(), FRotator(0.f));
-	if (Enemy)
-	{
-		Enemy->SpawnManager = SpawnManager;
-		return true;
-	}
-	return false;
+	Enemy->SpawnManager = SpawnManager;
+	return true;
 }
 
 // Called when the game starts or when spawned

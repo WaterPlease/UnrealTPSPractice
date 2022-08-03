@@ -118,7 +118,7 @@ void ASpawnManager::Tick(float DeltaTime)
 		UE_LOG(LogTemp, Warning, TEXT("Enemy count check"));
 		Algo::RandomShuffle(SpawnVolumes);
 
-		int N = SpawnList.Num();
+		int N = SpawnVolumes.Num();
 		for (int i = 0; i < N && SpawnedEnemy < MaxNumOfEnemy; i++)
 		{
 			TSubclassOf<AEnemyCharacter> EnemyClass = SpawnKeyList[SampleFromCDF(SpawnCDF)];
@@ -128,7 +128,9 @@ void ASpawnManager::Tick(float DeltaTime)
 			}
 		}
 
-		if (KilledEnemy == MaxNumOfEnemy)
+		AActor* EnemyActor = UGameplayStatics::GetActorOfClass(GetWorld(), TSubclassOf<AEnemyCharacter>());
+
+		if (SpawnedEnemy == MaxNumOfEnemy && SpawnedEnemy == KilledEnemy)
 		{
 			NextRound();
 		}

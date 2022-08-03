@@ -17,6 +17,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn | Config")
 	int MaxNumOfEnemy;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn | Config")
+	int SpawnedEnemy;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn | Config")
+	int KilledEnemy;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn | Config")
 	float BreakTime;
@@ -33,15 +37,20 @@ public:
 	void NextRound();
 
 	void AddKilledEnemy();
+
 	TSubclassOf<AItem> SampleDropItem();
 
 	void StartSpawn();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn | Volume")
+		TArray<TSubclassOf<AEnemyCharacter>> SpawnKeyList;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn | Volume")
+		TArray<float> SpawnCDF;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
-	TArray<float> SpawnCDF;
 	TArray<float> DropCDF;
 	
 	template<typename TCLASS>
@@ -50,12 +59,8 @@ private:
 	int SampleFromCDF(const TArray<float>& CDF);
 
 	bool bSpawn;
-
-	TArray<TSubclassOf<AEnemyCharacter>> SpawnKeyList;
 	TArray<TSubclassOf<AItem>> DropKeyList;
 
-	int SpawnedEnemy;
-	int KilledEnemy;
 	int Round;
 
 	FTimerHandle SpawnTimer;

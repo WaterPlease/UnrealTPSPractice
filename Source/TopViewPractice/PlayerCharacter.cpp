@@ -166,6 +166,12 @@ APlayerCharacter::APlayerCharacter()
 	CursorOffset = FVector2D(0.f);
 	RecoilVelocity = FRotator(0.f);
 
+	PerkRecoil = 1.f;
+	PerkSpread = 1.f;
+	PerkMagSize = 0;
+	PerkStamina = 1.f;
+
+	bCanControll = true;
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -305,7 +311,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		Spread = FMath::FInterpTo(
 			Spread,
-			BaseMinSpread,
+			BaseMinSpread * PerkSpread,
 			DeltaTime,
 			BaseSpreadRestoreSpeed
 		);
@@ -362,6 +368,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 // Vertical movement input handler
 void APlayerCharacter::InputVertical(float Value)
 {
+	if (!bCanControll) return;
 	if (!FMath::IsNearlyZero(Value) && CanMove())
 	{
 		FVector FrontVector = GetCameraComponent()->GetForwardVector();
@@ -374,6 +381,7 @@ void APlayerCharacter::InputVertical(float Value)
 // Vertical movement input handler
 void APlayerCharacter::InputHorizontal(float Value)
 {
+	if (!bCanControll) return;
 	if (!FMath::IsNearlyZero(Value) && CanMove())
 	{
 		FVector RightVector = GetCameraComponent()->GetRightVector();
@@ -386,6 +394,7 @@ void APlayerCharacter::InputHorizontal(float Value)
 // Zoom input handler
 void APlayerCharacter::Zoom(float Value)
 {
+	if (!bCanControll) return;
 	if (!FMath::IsNearlyZero(Value) && !bRMBInput)
 	{
 		float DeltaDistance = (CameraMaxDistance - CameraMinDistance) / (float)ZoomLevel;
@@ -397,6 +406,7 @@ void APlayerCharacter::Zoom(float Value)
 // Horizontal turn (mouse drag) input handler
 void APlayerCharacter::HorizontalTurn(float Value)
 {
+	if (!bCanControll) return;
 	if (!FMath::IsNearlyZero(Value))
 		CamRotation.Yaw += Value * CameraSensitivity;
 }
@@ -404,12 +414,14 @@ void APlayerCharacter::HorizontalTurn(float Value)
 // Horizontal turn (mouse drag) input handler
 void APlayerCharacter::VerticalTurn(float Value)
 {
+	if (!bCanControll) return;
 	if (!FMath::IsNearlyZero(Value))
-	CamRotation.Pitch += Value * CameraSensitivity;
+		CamRotation.Pitch += Value * CameraSensitivity;
 }
 
 void APlayerCharacter::LMBDown()
 {
+	if (!bCanControll) return;
 	bLMBInput = true;
 	bTryFire = true;
 	bLMBLook = true;
@@ -426,6 +438,7 @@ void APlayerCharacter::LMBUp()
 
 void APlayerCharacter::RMBDown()
 {
+	if (!bCanControll) return;
 	bRMBInput = true;
 
 	TempCameraDistance = CameraDistance;
@@ -445,6 +458,7 @@ void APlayerCharacter::RMBUp()
 
 void APlayerCharacter::RunDown()
 {
+	if (!bCanControll) return;
 	bRunInput = true;
 
 	if (!bRMBInput)
@@ -461,6 +475,7 @@ void APlayerCharacter::RunUp()
 
 void APlayerCharacter::CrouchDown()
 {
+	if (!bCanControll) return;
 	bCrouchInput = true;
 
 	bCrouch = !bCrouch;
@@ -487,16 +502,18 @@ void APlayerCharacter::CrouchUp()
 
 void APlayerCharacter::Jump()
 {
-	if (Stamina > JumpStamina &&
+	if (!bCanControll) return;
+	if (Stamina > (JumpStamina * PerkStamina) &&
 		CanJump())
 	{
-		Stamina -= JumpStamina;
+		Stamina -= JumpStamina * PerkStamina;
 		Super::Jump();
 	}
 }
 
 void APlayerCharacter::GrenadeDown()
 {
+	if (!bCanControll) return;
 	bGrenadeInput = true;
 
 	ThrowGrenade();
@@ -512,6 +529,7 @@ void APlayerCharacter::GrenadeUp()
 
 void APlayerCharacter::ReloadDown()
 {
+	if (!bCanControll) return;
 	bReloadInput = true;
 
 	if (PlayerActionState != EPlayerActionState::EPA_Idle) return;
@@ -533,6 +551,7 @@ void APlayerCharacter::ReloadUp()
 
 void APlayerCharacter::InteractionDown()
 {
+	if (!bCanControll) return;
 	bInteractionInput = true;
 
 	if (WeaponToEquipped)
@@ -548,13 +567,14 @@ void APlayerCharacter::InteractionUp()
 
 void APlayerCharacter::DodgeDown()
 {
+	if (!bCanControll) return;
 	bDodgeInput = true;
 
 	if (PlayerActionState == EPlayerActionState::EPA_Diving ||
 		PlayerActionState == EPlayerActionState::EPA_Throwing ||
 		GetCharacterMovement()->IsFalling() ||
-		Stamina < DodgeStamina) return;
-	Stamina -= DodgeStamina;
+		Stamina < (DodgeStamina * PerkStamina)) return;
+	Stamina -= DodgeStamina * PerkStamina;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
@@ -608,6 +628,7 @@ void APlayerCharacter::DodgeUp()
 
 void APlayerCharacter::CameraRotationDown()
 {
+	if (!bCanControll) return;
 	bCameraRotationInput = true;
 }
 
@@ -618,6 +639,7 @@ void APlayerCharacter::CameraRotationUp()
 
 void APlayerCharacter::CameraSideDown()
 {
+	if (!bCanControll) return;
 	bCameraSideInput = true;
 
 	CameraRelativeLocation = GetCameraComponent()->GetRelativeLocation();
@@ -639,9 +661,9 @@ bool APlayerCharacter::CanMove()
 void APlayerCharacter::Reload()
 {
 	if (RoundRemain == 0)
-		RoundRemain = RoundCapacity;
+		RoundRemain = RoundCapacity + PerkMagSize;
 	else
-		RoundRemain = RoundCapacity + 1;
+		RoundRemain = RoundCapacity + PerkMagSize + 1;
 	UE_LOG(LogTemp, Warning, TEXT("Remain Round : %d"), RoundRemain);
 }
 
@@ -994,7 +1016,7 @@ void APlayerCharacter::Fire()
 		// Spread Increase
 		Spread = FMath::FInterpTo(
 			Spread,
-			BaseMaxSpread * ((bRMBInput) ? 1.0f:2.0f),
+			BaseMaxSpread * ((bRMBInput) ? 1.0f:2.0f) * PerkSpread,
 			FireIntervalTime,
 			BaseSpreadIncreaseSpeed
 		);
@@ -1003,6 +1025,7 @@ void APlayerCharacter::Fire()
 		RecoilVelocity.Yaw = FMath::FRandRange(-BaseHorizontalRecoil, BaseHorizontalRecoil);
 		RecoilVelocity.Pitch = BaseVerticalRecoil;
 		RecoilVelocity.Roll = 0.f;
+		RecoilVelocity *= PerkRecoil;
 		RecoilDampingTime = 0.f;
 
 		GetWorldTimerManager().ClearTimer(CursorResetTimerHandle);

@@ -23,6 +23,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Screen")
 	UUserWidget* InGameScreenWidget;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI | Screen")
+	TSubclassOf<UUserWidget> PerkSelectWidgetAsset;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Screen")
+	UUserWidget* PerkSelectWidget;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "UI | Screen")
 	class UScoringBox* WidgetScoreBox;
 
@@ -55,6 +61,9 @@ public:
 	APlayerCharacter* GetPlayer();
 
 	void NextRound(int _Round, float BreakTime);
+
+	UFUNCTION(BlueprintCallable)
+	void StartRound();
 
 	UFUNCTION(BlueprintCallable)
 	void AddScore(int ScoreAmount);

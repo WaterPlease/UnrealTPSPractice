@@ -33,6 +33,15 @@ void APlayerCharacterController::BeginPlay()
 			InGameScreenWidget->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
+	if (PerkSelectWidgetAsset)
+	{
+		PerkSelectWidget = CreateWidget<UUserWidget>(this, PerkSelectWidgetAsset);
+		if (PerkSelectWidget)
+		{
+			PerkSelectWidget->AddToViewport();
+			PerkSelectWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 
 	InGameHUD = Cast<AInGameHUD>(GetHUD());
 }
@@ -90,6 +99,28 @@ void APlayerCharacterController::NextRound(int _Round, float BreakTime)
 {
 	Round = _Round;
 	RoundTimer = BreakTime;
+	if (PerkSelectWidget)
+	{
+		if (Player)
+		{
+			Player->bCanControll = false;
+		}
+		bShowMouseCursor = true;
+		PerkSelectWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void APlayerCharacterController::StartRound()
+{
+	if (PerkSelectWidget)
+	{
+		if (Player)
+		{
+			Player->bCanControll = true;
+		}
+		PerkSelectWidget->SetVisibility(ESlateVisibility::Hidden);
+		bShowMouseCursor = false;
+	}
 }
 
 void APlayerCharacterController::AddScore(int ScoreAmount)

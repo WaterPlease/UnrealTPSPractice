@@ -206,6 +206,21 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Stats")
 	float TimeToMoveMuzzle;
 
+
+	// Perk
+	// 1. 반동감소 2%
+	// 2. spread 감소 2 %
+	// 3. 탄창 5 %
+	// 4. 스태미나 소모 5 %
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Perk")
+	float PerkRecoil;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Perk")
+	float PerkSpread;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Perk")
+	int PerkMagSize;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Perk")
+	float PerkStamina;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character | IK")
 	bool bIKRotation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character | IK")
@@ -241,6 +256,8 @@ public:
 	FVector CursorLocation;
 	FRotator RecoilVelocity;
 	float RecoilDampingTime;
+
+	bool bCanControll;
 
 protected:
 	// Called when the game starts or when spawned
