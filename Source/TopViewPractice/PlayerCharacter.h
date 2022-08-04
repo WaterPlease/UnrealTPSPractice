@@ -80,6 +80,8 @@ public:
 	/** Grenade Type */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
 	TSubclassOf<class ABaseGrenade> GrenadeType;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	TSubclassOf<class AStunGrenade> StunGrenadeType;
 	
 	/** Animation Montage for Character's Action*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
@@ -98,6 +100,8 @@ public:
 	bool bCrouchInput;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
 	bool bGrenadeInput;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
+	bool bStunGrenadeInput;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
 	bool bReloadInput;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input State")
@@ -153,6 +157,8 @@ public:
 	uint8 RoundRemain;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Stats")
 	uint8 GrenadeRemain;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Stats")
+	uint8 StunGrenadeRemain;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Stats")
 	float ThrowSpeed;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Stats")
@@ -315,6 +321,11 @@ public:
 	void GrenadeUp();
 
 	UFUNCTION()
+	void StunGrenadeDown();
+	UFUNCTION()
+	void StunGrenadeUp();
+
+	UFUNCTION()
 	void ReloadDown();
 	UFUNCTION()
 	void ReloadUp();
@@ -409,6 +420,9 @@ private:
 	TArray<AActor*> MuzzleColliderArray;
 
 	FRotator CombatUIRotation;
+
+
+	TSubclassOf<class ABaseGrenade> ThrownGrenadeType;
 
 	/**
 	* User Private Function Declaration

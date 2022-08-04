@@ -18,6 +18,7 @@ ABaseGrenade::ABaseGrenade()
 	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
 	SetRootComponent(Sphere);
 	Sphere->SetMobility(EComponentMobility::Movable);
+	Sphere->SetCollisionProfileName(FName("BlockAllDynamic"));
 	Sphere->SetSimulatePhysics(true);
 	Sphere->SetEnableGravity(true);
 

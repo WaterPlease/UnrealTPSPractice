@@ -26,6 +26,7 @@
 #include "GameFramework/GameUserSettings.h"
 #include "Math/UnrealMathUtility.h"
 #include "BaseGrenade.h"
+#include "StunGrenade.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -104,6 +105,8 @@ APlayerCharacter::APlayerCharacter()
 	bCanAim = false;
 	bHeal = true;
 	bLMBLook = false;
+	bGrenadeInput = false;
+	bStunGrenadeInput = false;
 
 	PlayerActionState = EPlayerActionState::EPA_Idle;
 
@@ -121,7 +124,8 @@ APlayerCharacter::APlayerCharacter()
 	GunRPMMultiplier = 1.f;
 	RoundCapacity = 30;
 	RoundRemain = 31;
-	GrenadeRemain = 0;
+	GrenadeRemain = 1;
+	StunGrenadeRemain = 1;
 	ThrowSpeed = 1600.f;
 	Spread = 0.f;
 	BaseMinSpread = 0.f;
@@ -200,7 +204,6 @@ void APlayerCharacter::BeginPlay()
 
 	Spread = BaseMinSpread;
 
-	GrenadeRemain = 1;
 
 	CameraRelativeLocation = GetCameraComponent()->GetRelativeLocation();
 }
@@ -341,6 +344,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	PlayerInputComponent->BindAction(TEXT("Grenade"), EInputEvent::IE_Pressed, this, &APlayerCharacter::GrenadeDown);
 	PlayerInputComponent->BindAction(TEXT("Grenade"), EInputEvent::IE_Released, this, &APlayerCharacter::GrenadeUp);
+
+	PlayerInputComponent->BindAction(TEXT("StunGrenade"), EInputEvent::IE_Pressed, this, &APlayerCharacter::StunGrenadeDown);
+	PlayerInputComponent->BindAction(TEXT("StunGrenade"), EInputEvent::IE_Released, this, &APlayerCharacter::StunGrenadeUp);
 
 	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &APlayerCharacter::ReloadDown);
 	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Released, this, &APlayerCharacter::ReloadUp);
@@ -516,6 +522,7 @@ void APlayerCharacter::GrenadeDown()
 	if (!bCanControll) return;
 	bGrenadeInput = true;
 
+	ThrownGrenadeType = GrenadeType;
 	ThrowGrenade();
 
 	bLMBLook = true;
@@ -525,6 +532,23 @@ void APlayerCharacter::GrenadeDown()
 void APlayerCharacter::GrenadeUp()
 {
 	bGrenadeInput = false;
+}
+
+void APlayerCharacter::StunGrenadeDown()
+{
+	if (!bCanControll) return;
+	bStunGrenadeInput = true;
+
+	ThrownGrenadeType = StunGrenadeType;
+	ThrowGrenade();
+
+	bLMBLook = true;
+	GetWorldTimerManager().SetTimer(LMBLookTimerHandle, this, &APlayerCharacter::ResetLMBLook, 3.0f);
+}
+
+void APlayerCharacter::StunGrenadeUp()
+{
+	bStunGrenadeInput = false;
 }
 
 void APlayerCharacter::ReloadDown()
@@ -677,7 +701,7 @@ void APlayerCharacter::SpawnGrenade()
 {
 	FVector LeftHandLocation = GetMesh()->GetSocketLocation("RightHandSocket");
 
-	ABaseGrenade* Grenade = GetWorld()->SpawnActor<ABaseGrenade>(GrenadeType,
+	ABaseGrenade* Grenade = GetWorld()->SpawnActor<ABaseGrenade>(ThrownGrenadeType,
 		LeftHandLocation,
 		FMath::VRand().Rotation());
 
@@ -687,7 +711,14 @@ void APlayerCharacter::SpawnGrenade()
 		return;
 	}
 
-	GrenadeRemain -= 1;
+	if (ThrownGrenadeType == GrenadeType)
+	{
+		GrenadeRemain -= 1;
+	}
+	else if (ThrownGrenadeType == StunGrenadeType)
+	{
+		StunGrenadeRemain -= 1;
+	}
 
 	Grenade->Sphere->SetAllPhysicsLinearVelocity(
 		ThrowSpeed * (CursorLocation - LeftHandLocation).GetSafeNormal()
@@ -1046,11 +1077,15 @@ void APlayerCharacter::Fire()
 
 void APlayerCharacter::ThrowGrenade()
 {
-	if (GrenadeRemain == 0)
+	if (ThrownGrenadeType == GrenadeType && GrenadeRemain == 0)
 	{
-		// Say No Grenade
 		return;
 	}
+	else if (ThrownGrenadeType == StunGrenadeType && StunGrenadeRemain == 0)
+	{
+		return;
+	}
+
 	if (PlayerActionState != EPlayerActionState::EPA_Idle) return;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
