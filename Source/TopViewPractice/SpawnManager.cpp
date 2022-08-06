@@ -130,8 +130,20 @@ void ASpawnManager::Tick(float DeltaTime)
 
 		AActor* EnemyActor = UGameplayStatics::GetActorOfClass(GetWorld(), TSubclassOf<AEnemyCharacter>());
 
-		if (SpawnedEnemy == MaxNumOfEnemy && SpawnedEnemy == KilledEnemy)
+		if (KilledEnemy == MaxNumOfEnemy)
 		{
+			TArray<AActor*> EnemyCharacters;
+			UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyCharacter::StaticClass(), EnemyCharacters);
+			for (auto _Enemy : EnemyCharacters)
+			{
+				auto Enemy = Cast<AEnemyCharacter>(_Enemy);
+
+				if (Enemy)
+				{
+					Enemy->Score = 0;
+					Enemy->Die();
+				}
+			}
 			NextRound();
 		}
 	}

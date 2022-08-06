@@ -10,6 +10,12 @@
 #include "Camera/CameraComponent.h"
 #include "EnemyCharacter.h"
 #include "ScoringBox.h"
+#include "Weapon.h"
+#include "GameFramework/PlayerController.h"
+#include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "EnemyHealthBar.h"
+#include "Components/ProgressBar.h"
 
 APlayerCharacterController::APlayerCharacterController()
 {
@@ -42,6 +48,26 @@ void APlayerCharacterController::BeginPlay()
 			PerkSelectWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
+	if (WeaponEquipWidgetAsset)
+	{
+		WeaponEquipWidget = CreateWidget<UUserWidget>(this, WeaponEquipWidgetAsset);
+		if (WeaponEquipWidget)
+		{
+			WeaponEquipWidget->AddToViewport();
+			WeaponEquipWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
+	if (EnemyHealthBarAsset)
+	{
+		EnemyHealthBar = CreateWidget<UEnemyHealthBar>(this, EnemyHealthBarAsset);
+		if (EnemyHealthBar)
+		{
+			EnemyHealthBar->SetDesiredSizeInViewport(EnemyHealthBarSize);
+			EnemyHealthBar->AddToViewport();
+			EnemyHealthBar->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 
 	InGameHUD = Cast<AInGameHUD>(GetHUD());
 }
@@ -66,6 +92,46 @@ void APlayerCharacterController::Tick(float DeltaTime)
 		GEngine->GameViewport->GetViewportSize(Result);
 		InGameHUD->CrosshairLineOffset = ProjectedPosition.X * Result.X * 0.5f;
 		InGameHUD->CursorOffset = Player->CursorOffset;
+	}
+
+	if (WeaponEquipWidget &&
+		GetPlayer())
+	{
+		if (Player->WeaponToEquipped)
+		{
+			AWeapon* Weapon = Player->WeaponToEquipped;
+			FVector WeaponLocation = Weapon->GetActorLocation();
+			WeaponLocation.Z += Weapon->ItemSphere->GetScaledSphereRadius();
+			FVector2D ScreenPos;
+			UGameplayStatics::ProjectWorldToScreen(this, WeaponLocation, ScreenPos);
+			WeaponEquipWidget->SetPositionInViewport(ScreenPos);
+			WeaponEquipWidget->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			WeaponEquipWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
+	if (EnemyHealthBar &&
+		GetPlayer())
+	{
+		if (Player->EnemyOnCursor)
+		{
+			AEnemyCharacter* Enemy = Player->EnemyOnCursor;
+			FVector EnemyLocation = Enemy->GetActorLocation();
+			EnemyLocation.Z += Enemy->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 1.2f;;
+			FVector2D ScreenPos;
+			UGameplayStatics::ProjectWorldToScreen(this, EnemyLocation, ScreenPos);
+			ScreenPos.X -= EnemyHealthBarSize.X * 0.25f;
+			EnemyHealthBar->SetPositionInViewport(ScreenPos);
+			EnemyHealthBar->SetVisibility(ESlateVisibility::Visible);
+			EnemyHealthBar->HealthBar->SetPercent(Enemy->Health / Enemy->MaxHealth);
+		}
+		else
+		{
+			EnemyHealthBar->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 
 	if (RoundTimer > 0.f)

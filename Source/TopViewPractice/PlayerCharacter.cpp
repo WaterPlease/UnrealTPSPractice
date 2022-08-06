@@ -27,6 +27,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "BaseGrenade.h"
 #include "StunGrenade.h"
+#include "EnemyCharacter.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -206,6 +207,14 @@ void APlayerCharacter::BeginPlay()
 
 
 	CameraRelativeLocation = GetCameraComponent()->GetRelativeLocation();
+
+	AWeapon* InitialWeapon;
+	InitialWeapon = GetWorld()->SpawnActor<AWeapon>(InitialWeaponType);
+
+	if (IsValid(InitialWeapon))
+	{
+		EquipWeapon(InitialWeapon);
+	}
 }
 
 // Called every frame
@@ -259,6 +268,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		SpinePitch = 0.f;
 	}
+	SpinePitch = FMath::Clamp(SpinePitch, -80.f, 80.f);
 
 	// Camera rotaion
 	RecoilDampingTime += DeltaTime;
@@ -736,6 +746,7 @@ void APlayerCharacter::EquipWeapon(AWeapon* Weapon)
 	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName("RightHandSocket"));
 	Weapon->GetMesh()->SetVisibility(false);
 	Weapon->ItemParticleSystem->SetVisibility(false);
+	Weapon->ItemSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponMeshComponent->SetSkeletalMesh(Weapon->WeaponMesh);
 	WeaponMeshComponent->SetRelativeTransform(Weapon->WeaponRelativeTransform);
 
@@ -928,6 +939,20 @@ void APlayerCharacter::UpdateCurosorTransform()
 		if (bCanAim)
 		{
 			CursorLocation = HitResult.Location;
+			// Cursor on Weapon case
+			if ((CursorLocation - GetActorLocation()).Size() < 300.f)
+			{
+				WeaponToEquipped = Cast<AWeapon>(HitResult.Actor);
+			}
+			else
+			{
+				WeaponToEquipped = nullptr;
+			}
+			
+			// Cursor on Enemy case
+			EnemyOnCursor = Cast<AEnemyCharacter>(HitResult.Actor);
+
+			//DrawDebugSphere(GetWorld(), CursorLocation, 50.f, 16, FColor::Red);
 			/*
 			FVector CursorFV = HitResult.ImpactNormal;
 			FRotator CursorR = CursorFV.Rotation();

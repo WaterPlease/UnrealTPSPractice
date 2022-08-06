@@ -37,6 +37,7 @@ void AItem::BeginPlay()
 	ItemSphere->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	ItemSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ItemSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn,ECollisionResponse::ECR_Overlap);
+	ItemSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Block);
 	ItemSphere->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnItemSphereOverlapBegin);
 	ItemSphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnItemSphereOverlapEnd);
 

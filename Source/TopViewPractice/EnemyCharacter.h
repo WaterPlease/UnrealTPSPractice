@@ -113,6 +113,7 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	class ASpawnManager* SpawnManager;
+	void Die();
 private:
 	APlayerCharacter* PlayerCharacter;
 
@@ -125,7 +126,6 @@ private:
 	void ChasePlayer();
 	void Attack();
 
-	void Die();
 	void DieDone();
 
 	bool bTryLookAt;

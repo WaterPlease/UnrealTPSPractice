@@ -29,6 +29,21 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Screen")
 	UUserWidget* PerkSelectWidget;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI | Screen")
+	TSubclassOf<UUserWidget> WeaponEquipWidgetAsset;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Screen")
+	UUserWidget* WeaponEquipWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI | Screen")
+	TSubclassOf<class UEnemyHealthBar> EnemyHealthBarAsset;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Screen")
+	UEnemyHealthBar* EnemyHealthBar;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI | Screen")
+	FVector2D EnemyHealthBarSize;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "UI | Screen")
 	class UScoringBox* WidgetScoreBox;
 

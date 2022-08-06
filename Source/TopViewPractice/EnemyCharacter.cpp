@@ -262,6 +262,9 @@ float AEnemyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damage
 {
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
+	if (EnemyActionState == EEnemyActionState::EEA_Die)
+		return DamageAmount;
+
 	if (DamageHistory.Contains(DamageCauser))
 		return DamageAmount;
 
@@ -278,6 +281,7 @@ float AEnemyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damage
 	Health -= DamageAmount;
 	if (Health < 0.f || FMath::IsNearlyZero(Health))
 	{
+		EnemyActionState = EEnemyActionState::EEA_Die;
 		Die();
 	}
 	return DamageAmount;
@@ -355,7 +359,6 @@ void AEnemyCharacter::Attack()
 
 void AEnemyCharacter::Die()
 {
-	if (EnemyActionState == EEnemyActionState::EEA_Die) return;
 
 	EnemyActionState = EEnemyActionState::EEA_Die;
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);

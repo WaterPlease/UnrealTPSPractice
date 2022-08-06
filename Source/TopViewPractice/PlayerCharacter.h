@@ -82,6 +82,8 @@ public:
 	TSubclassOf<class ABaseGrenade> GrenadeType;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
 	TSubclassOf<class AStunGrenade> StunGrenadeType;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	TSubclassOf<class AWeapon> InitialWeaponType;
 	
 	/** Animation Montage for Character's Action*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat", meta = (AllowPrivateAccess = "true"))
@@ -243,6 +245,8 @@ public:
 	class AWeapon* EquippedWeapon;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Weapon")
 	class AWeapon* WeaponToEquipped;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Weapon")
+	class AEnemyCharacter* EnemyOnCursor;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character | UI")
