@@ -815,15 +815,18 @@ void APlayerCharacter::OnMuzzleTriggerOverlapEnd(UPrimitiveComponent* Overlapped
 float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float EffectiveDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	bHeal = false;
-	Health -= EffectiveDamage; 
-	if (Health < 0.f)
+	if (EffectiveDamage > 0.f)
 	{
-		Die();
-	}
-	else
-	{
-		GetWorldTimerManager().SetTimer(HealTimerHandle, this, &APlayerCharacter::SetHealable, HealthRegenDelay);
+		bHeal = false;
+		Health -= EffectiveDamage;
+		if (Health < 0.f)
+		{
+			Die();
+		}
+		else
+		{
+			GetWorldTimerManager().SetTimer(HealTimerHandle, this, &APlayerCharacter::SetHealable, HealthRegenDelay);
+		}
 	}
 	return EffectiveDamage;
 }

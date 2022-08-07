@@ -51,6 +51,8 @@ public:
 	class UAnimMontage* CombatMontage;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Combat")
 	class USoundCue* AttackSoundCue;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Combat")
+	class UParticleSystem* HitParticleSystem;
 
 	// Enemy character state
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Enemy | State")
@@ -114,6 +116,9 @@ public:
 
 	class ASpawnManager* SpawnManager;
 	void Die();
+
+	UFUNCTION(BlueprintCallable)
+	void Attack();
 private:
 	APlayerCharacter* PlayerCharacter;
 
@@ -124,7 +129,6 @@ private:
 	*/
 	void LookAtPlayer(float DeltaTime);
 	void ChasePlayer();
-	void Attack();
 
 	void DieDone();
 

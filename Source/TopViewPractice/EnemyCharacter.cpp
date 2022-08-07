@@ -129,6 +129,8 @@ void AEnemyCharacter::BeginPlay()
 
 	RadarPoint->SetRelativeScale3D(FVector((2.f / 34.f) * GetCapsuleComponent()->GetUnscaledCapsuleRadius()));
 	RadarPoint->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	GetPlayerCharacter();
 }
 
 // Called every frame
@@ -138,6 +140,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 
 
 	// State transition
+	/*
 	switch (EnemyActionState)
 	{
 	case EEnemyActionState::EEA_Idle:
@@ -165,23 +168,34 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	default:
 		break;
 	}
-
+	*/
 	if (bTryLookAt &&
-		EnemyActionState != EEnemyActionState::EEA_Attack)
+		EnemyActionState != EEnemyActionState::EEA_Attack &&
+		EnemyActionState != EEnemyActionState::EEA_Die)
 		LookAtPlayer(DeltaTime);
+	
 }
 
 void AEnemyCharacter::AttackSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if ((AActor*)PlayerCharacter != OtherActor) return;
-
+	if ((AActor*)PlayerCharacter != OtherActor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Not Player"));
+		return;
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("ATTACK OVERLAP Begin"));
 	bCanAttack = true;
 }
 
 void AEnemyCharacter::AttackSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if ((AActor*)PlayerCharacter != OtherActor) return;
-
+	if ((AActor*)PlayerCharacter != OtherActor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Not Player"));
+		return;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("ATTACK OVERLAP End"));
 	bCanAttack = false;
 }
 
@@ -360,7 +374,6 @@ void AEnemyCharacter::Attack()
 void AEnemyCharacter::Die()
 {
 
-	EnemyActionState = EEnemyActionState::EEA_Die;
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_EngineTraceChannel1, ECollisionResponse::ECR_Ignore);
@@ -368,6 +381,8 @@ void AEnemyCharacter::Die()
 	GetMesh()->SetSimulatePhysics(true);
 
 	AIController->StopMovement();
+	AIController->UnPossess();
+	EnemyActionState = EEnemyActionState::EEA_Die;
 
 	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	if (PlayerController)

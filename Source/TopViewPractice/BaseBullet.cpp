@@ -9,6 +9,8 @@
 #include "Sound/SoundCue.h"
 #include "PlayerCharacter.h"
 #include "Particles/ParticleSystem.h"
+#include "EnemyCharacter.h"
+#include "Engine/DecalActor.h"
 
 // Sets default values
 ABaseBullet::ABaseBullet()
@@ -109,8 +111,8 @@ void ABaseBullet::OnBulletHeadHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	*/
 
 	// Add impulse to non character
-	ACharacter* Character = Cast<ACharacter>(OtherActor);
-	if (!Character && OtherActor)
+	AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor);
+	if (!Enemy && OtherActor)
 	{
 		auto HitActorComponent = OtherActor->GetComponentByClass(UStaticMeshComponent::StaticClass());
 		if (HitActorComponent)
@@ -135,6 +137,30 @@ void ABaseBullet::OnBulletHeadHit(UPrimitiveComponent* HitComponent, AActor* Oth
 			HitRotation,
 			FVector(0.1f)
 		);
+		if (BulletDecalAsset)
+		{
+			GetWorld()->SpawnActor<ADecalActor>(BulletDecalAsset,
+				FVector(Hit.ImpactPoint),
+				HitRotation
+				);
+		}
+	}
+	else if (Enemy)
+	{
+		FRotator HitRotation = FRotator::ZeroRotator;
+		HitRotation.Roll = FMath::RadiansToDegrees(FMath::Atan2(Hit.ImpactNormal.Y, Hit.ImpactNormal.Z));
+		HitRotation.Pitch = -FMath::RadiansToDegrees(FMath::Atan2(Hit.ImpactNormal.X, Hit.ImpactNormal.Z));
+		
+		if (Enemy->HitParticleSystem)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				Enemy->HitParticleSystem,
+				Hit.ImpactPoint,
+				HitRotation,
+				FVector(1.f)
+			);
+		}
 	}
 
 	// Apply Damage

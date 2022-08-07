@@ -38,6 +38,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet | Effect")
 	class UParticleSystem* SmokeParticleSystem;
 
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet | Effect")
+	TSubclassOf<class ADecalActor> BulletDecalAsset;
+
 	float Damage;
 
 	AActor* Shooter;
