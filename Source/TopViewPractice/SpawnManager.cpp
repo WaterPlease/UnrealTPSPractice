@@ -39,6 +39,23 @@ void ASpawnManager::NextRound()
 void ASpawnManager::AddKilledEnemy()
 {
 	KilledEnemy++;
+
+	if (KilledEnemy == MaxNumOfEnemy)
+	{
+		TArray<AActor*> EnemyCharacters;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyCharacter::StaticClass(), EnemyCharacters);
+		for (auto _Enemy : EnemyCharacters)
+		{
+			auto Enemy = Cast<AEnemyCharacter>(_Enemy);
+
+			if (Enemy)
+			{
+				Enemy->Score = 0.f;
+				Enemy->Die();
+			}
+		}
+		NextRound();
+	}
 }
 
 TSubclassOf<AItem> ASpawnManager::SampleDropItem()
@@ -126,25 +143,6 @@ void ASpawnManager::Tick(float DeltaTime)
 			{
 				SpawnedEnemy += 1;
 			}
-		}
-
-		AActor* EnemyActor = UGameplayStatics::GetActorOfClass(GetWorld(), TSubclassOf<AEnemyCharacter>());
-
-		if (KilledEnemy == MaxNumOfEnemy)
-		{
-			TArray<AActor*> EnemyCharacters;
-			UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyCharacter::StaticClass(), EnemyCharacters);
-			for (auto _Enemy : EnemyCharacters)
-			{
-				auto Enemy = Cast<AEnemyCharacter>(_Enemy);
-
-				if (Enemy)
-				{
-					Enemy->Score = 0;
-					Enemy->Die();
-				}
-			}
-			NextRound();
 		}
 	}
 }

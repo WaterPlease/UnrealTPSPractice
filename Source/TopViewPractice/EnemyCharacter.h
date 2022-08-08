@@ -63,6 +63,8 @@ public:
 	bool bCanAttack;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy | State")
 	bool bWaitAttack;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Enemy | State")
+	bool bTryLookAt;
 
 	// Enemy character Stat
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | State")
@@ -117,8 +119,11 @@ public:
 	class ASpawnManager* SpawnManager;
 	void Die();
 
+	void LookAtPlayer(float DeltaTime);
+
 	UFUNCTION(BlueprintCallable)
-	void Attack();
+	virtual void Attack();
+
 private:
 	APlayerCharacter* PlayerCharacter;
 
@@ -127,12 +132,10 @@ private:
 	/**
 	* User Private Function Declaration
 	*/
-	void LookAtPlayer(float DeltaTime);
 	void ChasePlayer();
 
 	void DieDone();
 
-	bool bTryLookAt;
 
 	TSet<AActor*> DamageHistory;
 

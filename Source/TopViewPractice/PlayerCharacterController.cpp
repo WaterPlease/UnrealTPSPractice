@@ -170,6 +170,7 @@ void APlayerCharacterController::NextRound(int _Round, float BreakTime)
 		if (Player)
 		{
 			Player->bCanControll = false;
+			Player->bLMBInput = false;
 		}
 		bShowMouseCursor = true;
 		PerkSelectWidget->SetVisibility(ESlateVisibility::Visible);

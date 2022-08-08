@@ -138,42 +138,10 @@ void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-
-	// State transition
-	/*
-	switch (EnemyActionState)
-	{
-	case EEnemyActionState::EEA_Idle:
-		if (bCanAttack)
-			Attack();
-		else
-			ChasePlayer();
-		break;
-	case EEnemyActionState::EEA_Chase:
-		if (bCanAttack)
-			Attack();
-		else
-		{
-			if (AIController &&
-				AIController->GetMoveStatus()
-				== EPathFollowingStatus::Idle)
-			{
-				ChasePlayer();
-			}
-		}
-	case EEnemyActionState::EEA_Attack:
-		break;
-	case EEnemyActionState::EEA_Die:
-		break;
-	default:
-		break;
-	}
-	*/
 	if (bTryLookAt &&
 		EnemyActionState != EEnemyActionState::EEA_Attack &&
 		EnemyActionState != EEnemyActionState::EEA_Die)
 		LookAtPlayer(DeltaTime);
-	
 }
 
 void AEnemyCharacter::AttackSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
