@@ -27,7 +27,7 @@ public:
 	TSubclassOf<class ABaseBullet> BulletType;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Combat")
-	class UParticleSystem* FireParticle;
+	class UParticleSystem* MuzzleFlashParticle;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Combat")
 	float BulletSpeed;

@@ -44,6 +44,7 @@ void ASpawnManager::AddKilledEnemy()
 	{
 		TArray<AActor*> EnemyCharacters;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyCharacter::StaticClass(), EnemyCharacters);
+		/*
 		for (auto _Enemy : EnemyCharacters)
 		{
 			auto Enemy = Cast<AEnemyCharacter>(_Enemy);
@@ -54,6 +55,7 @@ void ASpawnManager::AddKilledEnemy()
 				Enemy->Die();
 			}
 		}
+		*/
 		NextRound();
 	}
 }

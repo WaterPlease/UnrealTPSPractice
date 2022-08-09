@@ -35,12 +35,13 @@ void AMinimap::Tick(float DeltaTime)
 
 	if (GetPlayer())
 	{
-		//float Yaw = Player->CameraBoom->GetRelativeRotation().Yaw;
-		FRotator Rotation = Player->CameraBoom->GetRelativeRotation();
-		//FRotator Rotation = SceneCaptureComponent->GetRelativeRotation();
-		//Rotation.Yaw = Yaw;
-		Rotation.Pitch = -90.f;
-		SceneCaptureComponent->SetRelativeRotation(Rotation);
+		//FRotator Rotation = Player->CameraBoom->GetComponentRotation();
+		FVector ForwardVector = Player->CameraBoom->GetForwardVector();
+		ForwardVector.Z = 0.f;
+		FRotator Rotation = ForwardVector.Rotation();
+		//Rotation.Pitch = -90.f;
+		SceneCaptureComponent->SetWorldRotation(Rotation);
+		SceneCaptureComponent->AddRelativeRotation(FRotator(-90.f, 0.f, 0.f));
 	}
 }
 

@@ -206,7 +206,7 @@ void APlayerCharacterController::AddScore(int ScoreAmount)
 
 void APlayerCharacterController::EnemyKill(const AEnemyCharacter* const Enemy)
 {
-	if (!Enemy) return;
+	if (!Enemy || !IsValid(Enemy)) return;
 
 	AddScore(Enemy->Score);
 }

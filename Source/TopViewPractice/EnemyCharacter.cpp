@@ -17,6 +17,7 @@
 #include "PlayerCharacterController.h"
 #include "SpawnManager.h"
 #include "Item.h"
+#include "Sound/SoundCue.h"
 
 
 // Sets default values
@@ -82,6 +83,7 @@ AEnemyCharacter::AEnemyCharacter()
 // Called when the game starts or when spawned
 void AEnemyCharacter::BeginPlay()
 {
+
 	Super::BeginPlay();
 
 	AIController = Cast<AAIController>(GetController());
@@ -226,6 +228,11 @@ void AEnemyCharacter::LookAtSphereEndOverlap(UPrimitiveComponent* OverlappedComp
 void AEnemyCharacter::ActivateAttackCollision(int idx)
 {
 	AttackCollisions[idx]->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+	if (AttackSoundCue)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), AttackSoundCue, AttackCollisions[idx]->GetComponentLocation());
+	}
 }
 
 void AEnemyCharacter::DeactivateAttackCollision(int idx)
@@ -263,7 +270,6 @@ float AEnemyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damage
 	Health -= DamageAmount;
 	if (Health < 0.f || FMath::IsNearlyZero(Health))
 	{
-		EnemyActionState = EEnemyActionState::EEA_Die;
 		Die();
 	}
 	return DamageAmount;
@@ -342,15 +348,20 @@ void AEnemyCharacter::Attack()
 void AEnemyCharacter::Die()
 {
 
+	if (EnemyActionState == EEnemyActionState::EEA_Die) return;
+	EnemyActionState = EEnemyActionState::EEA_Die;
+
+	UE_LOG(LogTemp, Warning, TEXT("ENEMY DIE!"));
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
 	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_EngineTraceChannel1, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetSimulatePhysics(true);
 
 	AIController->StopMovement();
 	AIController->UnPossess();
-	EnemyActionState = EEnemyActionState::EEA_Die;
 
 	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	if (PlayerController)

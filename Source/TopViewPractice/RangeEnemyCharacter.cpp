@@ -7,6 +7,7 @@
 #include "PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "BaseBullet.h"
+#include "Sound/SoundCue.h"
 
 ARangeEnemyCharacter::ARangeEnemyCharacter()
 {
@@ -22,13 +23,26 @@ void ARangeEnemyCharacter::Fire()
 
 	FVector BulletDirection = FindBulletDirection(SocketLocation);
 
-	ABaseBullet* Bullet = GetWorld()->SpawnActor<ABaseBullet>(BulletType, SocketLocation, BulletDirection.Rotation());
-	Bullet->Shooter = (AActor*)this;
-	Bullet->Instigator = AIController;
-	Bullet->bShotByPlayer = false;
-	Bullet->Damage = Damage;
-	Bullet->InitialSpeed = BulletSpeed;
-	Bullet->LauchBullet(BulletDirection);
+	if (BulletType)
+	{
+		ABaseBullet* Bullet = GetWorld()->SpawnActor<ABaseBullet>(BulletType, SocketLocation, BulletDirection.Rotation());
+		Bullet->Shooter = (AActor*)this;
+		Bullet->Instigator = AIController;
+		Bullet->bShotByPlayer = false;
+		Bullet->Damage = Damage;
+		Bullet->InitialSpeed = BulletSpeed;
+		Bullet->LauchBullet(BulletDirection);
+	}
+
+	if (MuzzleFlashParticle)
+	{
+		UGameplayStatics::SpawnEmitterAttached(MuzzleFlashParticle,GetMesh(),FName("Muzzle_Front"),FVector::ZeroVector,FRotator(0.f,180.f,0.f), EAttachLocation::SnapToTarget);
+	}
+
+	if (AttackSoundCue)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), AttackSoundCue, SocketLocation);
+	}
 }
 
 FVector ARangeEnemyCharacter::FindBulletDirection(const FVector& E)
