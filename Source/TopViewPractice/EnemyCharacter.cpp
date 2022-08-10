@@ -361,7 +361,7 @@ void AEnemyCharacter::Die()
 	GetMesh()->SetSimulatePhysics(true);
 
 	AIController->StopMovement();
-	AIController->UnPossess();
+	AIController->Destroy();
 
 	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	if (PlayerController)
