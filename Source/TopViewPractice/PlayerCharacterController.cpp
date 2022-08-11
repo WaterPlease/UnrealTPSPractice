@@ -16,6 +16,7 @@
 #include "Components/CapsuleComponent.h"
 #include "EnemyHealthBar.h"
 #include "Components/ProgressBar.h"
+#include "Components/CapsuleComponent.h"
 
 APlayerCharacterController::APlayerCharacterController()
 {
@@ -104,6 +105,15 @@ void APlayerCharacterController::Tick(float DeltaTime)
 			WeaponLocation.Z += Weapon->ItemSphere->GetScaledSphereRadius();
 			FVector2D ScreenPos;
 			UGameplayStatics::ProjectWorldToScreen(this, WeaponLocation, ScreenPos);
+			WeaponEquipWidget->SetPositionInViewport(ScreenPos);
+			WeaponEquipWidget->SetVisibility(ESlateVisibility::Visible);
+		}
+		else if (Player->bCanExit)
+		{
+			FVector CapsuleLocation = Player->GetCapsuleComponent()->GetComponentLocation();
+			CapsuleLocation.Z += Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+			FVector2D ScreenPos;
+			UGameplayStatics::ProjectWorldToScreen(this, CapsuleLocation, ScreenPos);
 			WeaponEquipWidget->SetPositionInViewport(ScreenPos);
 			WeaponEquipWidget->SetVisibility(ESlateVisibility::Visible);
 		}

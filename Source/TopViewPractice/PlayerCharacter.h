@@ -261,6 +261,12 @@ public:
 	float MaxHitmarkerLifeTime;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | UI")
 	float CursorLineTraceDistance;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | UI")
+	float InteractionPercentage;
+
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Etc")
+	bool bCanExit;
 
 	FVector2D CursorOffset;
 	FVector CursorLocation;
@@ -401,6 +407,10 @@ public:
 	float GetCameraDistance();
 	UFUNCTION(BlueprintCallable)
 	void SetCameraDistance(float Value);
+
+
+	UFUNCTION(BlueprintNativeEvent)
+	void ExitGame();
 
 private:
 	/**

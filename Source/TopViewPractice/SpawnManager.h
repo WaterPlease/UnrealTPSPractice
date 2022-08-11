@@ -33,7 +33,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn | Volume")
 	TArray<class ASpawnVolume*> SpawnVolumes;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn | Exit")
+	ACameraActor* ExitCamera;
+
 	void NextRound();
 
 	void AddKilledEnemy();

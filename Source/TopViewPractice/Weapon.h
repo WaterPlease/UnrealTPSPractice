@@ -29,6 +29,8 @@ public:
 	class USkeletalMesh* WeaponMesh;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	FTransform WeaponRelativeTransform;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	FText WeaponName;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Particle")
 	class UParticleSystem* MuzzleParticleSystem;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Sound")

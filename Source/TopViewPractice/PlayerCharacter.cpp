@@ -28,6 +28,9 @@
 #include "BaseGrenade.h"
 #include "StunGrenade.h"
 #include "EnemyCharacter.h"
+#include "SpawnManager.h"
+#include "Camera/CameraActor.h"
+#include "Leaderboard.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -177,6 +180,8 @@ APlayerCharacter::APlayerCharacter()
 	PerkStamina = 1.f;
 
 	bCanControll = true;
+	bCanExit = false;
+	InteractionPercentage = 0.f;
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -330,6 +335,29 @@ void APlayerCharacter::Tick(float DeltaTime)
 		);
 	}
 	TimeAfterShot += DeltaTime;
+
+	if (bInteractionInput)
+	{
+		InteractionPercentage += 0.5f * DeltaTime;
+	}
+	else
+	{
+		InteractionPercentage -= 1.f * DeltaTime;
+	}
+	InteractionPercentage = FMath::Clamp(InteractionPercentage, 0.f, 1.f);
+	if (bInteractionInput && FMath::IsNearlyEqual(InteractionPercentage, 1.f))
+	{
+		if (WeaponToEquipped)
+		{
+			EquipWeapon(WeaponToEquipped);
+		}
+		else if (bCanExit)
+		{
+			bCanExit = false;
+			ExitGame();
+		}
+		bInteractionInput = false;
+	}
 }
 
 // Called to bind functionality to input
@@ -587,11 +615,6 @@ void APlayerCharacter::InteractionDown()
 {
 	if (!bCanControll) return;
 	bInteractionInput = true;
-
-	if (WeaponToEquipped)
-	{
-		EquipWeapon(WeaponToEquipped);
-	}
 }
 
 void APlayerCharacter::InteractionUp()
@@ -870,6 +893,28 @@ float APlayerCharacter::GetCameraDistance()
 void APlayerCharacter::SetCameraDistance(float Value)
 {
 	CameraDistance = Value;
+}
+
+void APlayerCharacter::ExitGame_Implementation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("EXIT!!!!!!!!"));
+	AActor* _SpawnManager = UGameplayStatics::GetActorOfClass(GetWorld(), ASpawnManager::StaticClass());
+	if (_SpawnManager)
+	{
+		ASpawnManager* SpawnManager = Cast<ASpawnManager>(_SpawnManager);
+		if (SpawnManager)
+		{
+			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+			if (Controller)
+			{
+				GetMesh()->SetVisibility(false);
+				CombatUI->SetVisibility(false);
+				PlayerController->SetViewTargetWithBlend(SpawnManager->ExitCamera, 2.0f);
+			}
+		}
+	}
+	TArray<ULeaderboard*> rows;
+	ULeaderboard::LoadRecords(rows);
 }
 
 // Smooth character look direction update

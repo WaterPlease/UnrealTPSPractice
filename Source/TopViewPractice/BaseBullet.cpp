@@ -180,6 +180,7 @@ void ABaseBullet::OnBulletHeadHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	if (!RemainBounce)
 	{
 		DestroyBullet();
+		return;
 	}
 	RemainBounce -= 1;
 }
