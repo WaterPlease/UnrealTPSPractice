@@ -11,6 +11,9 @@ AMainMenuController::AMainMenuController()
 
 void AMainMenuController::BeginPlay()
 {
+	bShowMouseCursor = true;
+	SetInputMode(FInputModeUIOnly());
+
 	if (MainMenuAsset)
 	{
 		MainMenu = CreateWidget<UUserWidget>(this, MainMenuAsset);

@@ -31,6 +31,7 @@
 #include "SpawnManager.h"
 #include "Camera/CameraActor.h"
 #include "Leaderboard.h"
+#include "PlayerCharacterController.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -802,9 +803,13 @@ void APlayerCharacter::EquipWeapon(AWeapon* Weapon)
 
 void APlayerCharacter::Die()
 {
+	if (PlayerActionState == EPlayerActionState::EPA_Dead) return;
 	PlayerActionState = EPlayerActionState::EPA_Dead;
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
+
+	UE_LOG(LogTemp, Warning, TEXT("Try Return To Main"));
+	GetWorldTimerManager().SetTimer(ExitTimerHandle, this, &APlayerCharacter::ReturnToMain, 5.0f);
 }
 
 // Muzzle up event handler
@@ -913,8 +918,18 @@ void APlayerCharacter::ExitGame_Implementation()
 			}
 		}
 	}
-	TArray<ULeaderboard*> rows;
-	ULeaderboard::LoadRecords(rows);
+	TArray<ULeaderboard*> Rows;
+	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
+	ULeaderboard::LoadRecords(Rows);
+	ULeaderboard::WriteRecord(Rows,FString("TEST2"), PlayerController->Score);
+
+	GetWorldTimerManager().SetTimer(ExitTimerHandle, this, &APlayerCharacter::ReturnToMain, 5.0f);
+}
+
+void APlayerCharacter::ReturnToMain()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Return To Main"));
+	UGameplayStatics::OpenLevel(GetWorld(), FName("MainMenu"));
 }
 
 // Smooth character look direction update

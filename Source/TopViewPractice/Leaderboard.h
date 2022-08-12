@@ -16,12 +16,14 @@ class TOPVIEWPRACTICE_API ULeaderboard : public USaveGame
 public:
 	ULeaderboard();
 
+	UPROPERTY()
 	FString PlayerName;
 
+	UPROPERTY()
 	int Score;
 
 	UFUNCTION(BlueprintCallable)
-	static void WriteRecord(TArray<ULeaderboard*>& Rows, FString PlayerName, int Score);
+	static void WriteRecord(TArray<ULeaderboard*>& Rows, FString _PlayerName, int _Score);
 	UFUNCTION(BlueprintCallable)
 	static void LoadRecords(TArray<ULeaderboard*>& rows);
 

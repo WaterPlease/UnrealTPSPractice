@@ -412,6 +412,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void ExitGame();
 
+	void ReturnToMain();
+
 private:
 	/**
 	* Private Variable Declaration
@@ -431,6 +433,7 @@ private:
 	FTimerHandle RecoilResetTimerHandle;
 	FTimerHandle LMBLookTimerHandle;
 	FTimerHandle HealTimerHandle;
+	FTimerHandle ExitTimerHandle;
 	TArray<AActor*> MuzzleColliderArray;
 
 	FRotator CombatUIRotation;

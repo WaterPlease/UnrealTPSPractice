@@ -10,17 +10,19 @@ ULeaderboard::ULeaderboard()
 
 }
 
-void ULeaderboard::WriteRecord(TArray<ULeaderboard*>& Rows, FString PlayerName, int Score)
+void ULeaderboard::WriteRecord(TArray<ULeaderboard*>& Rows, FString _PlayerName, int _Score)
 {
 	ULeaderboard* Row = Cast<ULeaderboard>(UGameplayStatics::CreateSaveGameObject(ULeaderboard::StaticClass()));
 	if (!Row) return;
 	
-	Row->PlayerName = PlayerName;
-	Row->Score = Score;
+	Row->PlayerName = _PlayerName;
+	Row->Score = _Score;
 
 	Rows.Add(Row);
 
 	Rows.StableSort(ULeaderboard::SortPredicate);
+
+	UE_LOG(LogTemp, Warning, TEXT("Leaderboard : %s --- %d"), *(Row->PlayerName), Row->Score);
 
 	if (Rows.Num() > 10)
 	{
@@ -31,6 +33,7 @@ void ULeaderboard::WriteRecord(TArray<ULeaderboard*>& Rows, FString PlayerName, 
 	{
 		FString SlotName = FString::Printf(TEXT("Leaderboard_%d"), i);
 		UGameplayStatics::SaveGameToSlot(Rows[i], SlotName, 0);
+		UE_LOG(LogTemp, Warning, TEXT("Leaderboard : Save \"%s\" with Name=\"%s\" and Score=%d"), *SlotName, *(Rows[i]->PlayerName), Rows[i]->Score);
 	}
 }
 
@@ -43,7 +46,6 @@ void ULeaderboard::LoadRecords(TArray<ULeaderboard*>& Rows)
 		args.Add(TEXT("0"), i);
 
 		FString SlotName = FString::Printf(TEXT("Leaderboard_%d"), i);
-		UE_LOG(LogTemp, Warning, TEXT("Check %s"), *SlotName);
 		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
 		{
 			ULeaderboard* Row = Cast<ULeaderboard>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
@@ -54,6 +56,14 @@ void ULeaderboard::LoadRecords(TArray<ULeaderboard*>& Rows)
 			}
 		}
 		break;
+	}
+
+	int i = 0;
+	for (auto Row : Rows)
+	{
+		i += 1;
+		//FString TTEST = "TTEST";
+		UE_LOG(LogTemp, Warning, TEXT("Leaderboard : %d. %s --- %d"), i, *(Row->PlayerName), Row->Score);
 	}
 }
 

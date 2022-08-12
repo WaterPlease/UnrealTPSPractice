@@ -30,6 +30,9 @@ void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	bShowMouseCursor = false;
+	SetInputMode(FInputModeGameOnly());
+
 	GetPlayer();
 	if (InGameScreenWidgetAsset)
 	{
@@ -183,6 +186,7 @@ void APlayerCharacterController::NextRound(int _Round, float BreakTime)
 			Player->bLMBInput = false;
 		}
 		bShowMouseCursor = true;
+		SetInputMode(FInputModeUIOnly());
 		PerkSelectWidget->SetVisibility(ESlateVisibility::Visible);
 	}
 }
