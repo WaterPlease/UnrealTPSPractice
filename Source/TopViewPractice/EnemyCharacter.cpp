@@ -18,6 +18,7 @@
 #include "SpawnManager.h"
 #include "Item.h"
 #include "Sound/SoundCue.h"
+#include "DrawDebugHelpers.h"
 
 
 // Sets default values
@@ -174,6 +175,9 @@ void AEnemyCharacter::AttackCollisionBeginOverlap(UPrimitiveComponent* Overlappe
 	if (AIController)
 		AIController->StopMovement();
 	// overlap with player
+	UBoxComponent* AttackCollision = Cast<UBoxComponent>(OverlappedComponent);
+	if (!AttackCollision) return;
+
 	if (Cast<APawn>(OtherActor))
 	{
 		if(!Cast<APlayerCharacter>(OtherActor)) return;
@@ -181,6 +185,31 @@ void AEnemyCharacter::AttackCollisionBeginOverlap(UPrimitiveComponent* Overlappe
 		// Apply damage to player
 		if (GetPlayerCharacter())
 		{
+			if (PlayerCharacter->DamageImpactSoundCue)
+			{
+				UGameplayStatics::PlaySound2D(GetWorld(), PlayerCharacter->DamageImpactSoundCue);
+			}
+
+			if (PlayerCharacter->DamageImpactParticleSystem)
+			{
+				TArray<FHitResult> HitResults;
+				bool bHit = GetWorld()->SweepMultiByChannel(HitResults, AttackCollision->GetComponentLocation(), AttackCollision->GetComponentLocation(), AttackCollision->GetComponentQuat(), ECC_Camera, AttackCollision->GetCollisionShape());
+				//DrawDebugBox(GetWorld(), TestCol->GetComponentLocation(), TestCol->GetScaledBoxExtent(), TestCol->GetComponentQuat(), FColor::Red, true, 5.f);
+				if (bHit)
+				{
+					for (auto HitResult : HitResults)
+					{
+						if (Cast<APlayerCharacter>(HitResult.GetActor()))
+						{
+							//UE_LOG(LogTemp, Warning, TEXT("Melee Attack hit at : (%f, %f, %f)"), HitResult.ImpactPoint.X, HitResult.ImpactPoint.Y, HitResult.ImpactPoint.Z);
+							//DrawDebugSphere(GetWorld(), HitResult.Location, 50.f, 10, FColor::Red, true, 5.f);
+							UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PlayerCharacter->DamageImpactParticleSystem, HitResult.ImpactPoint, FRotator::ZeroRotator, true);
+							break;
+						}
+					}
+				}
+			}
+
 			UGameplayStatics::ApplyDamage(
 				PlayerCharacter,
 				Damage,
@@ -189,12 +218,9 @@ void AEnemyCharacter::AttackCollisionBeginOverlap(UPrimitiveComponent* Overlappe
 				DamageType
 			);
 		}
+		AttackCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		return;
 	}
-	
-	UBoxComponent* AttackCollision = Cast<UBoxComponent>(OverlappedComponent);
-	
-	if (!AttackCollision) return;
 	// overlap with destructible
 	FVector Impulse = AttackCollision->GetComponentVelocity() * 50.f;
 	OtherComp->AddImpulseAtLocation(Impulse, SweepResult.Location);

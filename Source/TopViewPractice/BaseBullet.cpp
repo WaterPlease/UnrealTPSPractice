@@ -163,6 +163,19 @@ void ABaseBullet::OnBulletHeadHit(UPrimitiveComponent* HitComponent, AActor* Oth
 		}
 	}
 
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
+	if (PlayerCharacter)
+	{
+		if (PlayerCharacter->DamageImpactSoundCue)
+		{
+			UGameplayStatics::PlaySound2D(GetWorld(), PlayerCharacter->DamageImpactSoundCue);
+		}
+
+		if (PlayerCharacter->DamageImpactParticleSystem)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PlayerCharacter->DamageImpactParticleSystem, Hit.ImpactPoint, FRotator::ZeroRotator, true);
+		}
+	}
 	// Apply Damage
 	if (Shooter != OtherActor)
 	{

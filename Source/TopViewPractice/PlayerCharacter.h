@@ -69,7 +69,13 @@ public:
 	class USoundCue* EmptyShotSoundCue;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class USoundCue* DamageImpactSoundCue;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
 	class UParticleSystem* MuzzleParticleSystem;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
+	class UParticleSystem* DamageImpactParticleSystem;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Combat")
 	class UBoxComponent* MuzzleUpTriggerBox;
