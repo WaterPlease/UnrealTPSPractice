@@ -26,6 +26,8 @@ AItem::AItem()
 	
 	// Parameter initialization
 	bHighlighten = false;
+
+	AutoDestroyDelay = 60.f;
 }
 
 // Called when the game starts or when spawned
@@ -42,6 +44,16 @@ void AItem::BeginPlay()
 	ItemSphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnItemSphereOverlapEnd);
 
 	ItemParticleSystem->SetTemplate(IdleItemParticleSystem);
+
+	if (AutoDestroyDelay > 0.f)
+	{
+		GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &AItem::AutoDestroy, AutoDestroyDelay);
+	}
+}
+
+void AItem::AutoDestroy()
+{
+	Destroy();
 }
 
 bool AItem::ToggleHighlight()
@@ -63,10 +75,12 @@ bool AItem::ToggleHighlight()
 void AItem::OnItemSphereOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ToggleHighlight();
+	GetWorldTimerManager().ClearTimer(DestroyTimerHandle);
 }
 
 void AItem::OnItemSphereOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	ToggleHighlight();
+	GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &AItem::AutoDestroy, AutoDestroyDelay);
 }
 

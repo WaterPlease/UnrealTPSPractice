@@ -67,6 +67,23 @@ void ULeaderboard::LoadRecords(TArray<ULeaderboard*>& Rows)
 	}
 }
 
+void ULeaderboard::ClearRecords()
+{
+	for (int i = 0; i < 10; i++)
+	{
+		FStringFormatNamedArguments args;
+		args.Add(TEXT("0"), i);
+
+		FString SlotName = FString::Printf(TEXT("Leaderboard_%d"), i);
+		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
+		{
+			UGameplayStatics::DeleteGameInSlot(SlotName, 0);
+			continue;
+		}
+		break;
+	}
+}
+
 bool ULeaderboard::SortPredicate(ULeaderboard& A, ULeaderboard& B)
 {
 	return A.Score > B.Score;

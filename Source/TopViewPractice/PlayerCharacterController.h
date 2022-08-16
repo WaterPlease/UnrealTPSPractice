@@ -6,9 +6,15 @@
 #include "GameFramework/PlayerController.h"
 #include "PlayerCharacterController.generated.h"
 
-/**
- * 
- */
+
+enum class EZORDER : int32
+{
+	EZO_InGameUI UMETA(DisplayName = "InGame"),
+	EZO_PauseMenu UMETA(DisplayName = "PauseMenu"),
+
+	EZO_MAX UMETA(DisplayName = "DefaultMax")
+};
+
 UCLASS()
 class TOPVIEWPRACTICE_API APlayerCharacterController : public APlayerController
 {
@@ -16,6 +22,12 @@ class TOPVIEWPRACTICE_API APlayerCharacterController : public APlayerController
 
 public:
 	APlayerCharacterController();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI | Screen")
+	TSubclassOf<UUserWidget> InGamePauseWidgetAsset;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI | Screen")
+	UUserWidget* InGamePauseWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI | Screen")
 	TSubclassOf<UUserWidget> InGameScreenWidgetAsset;
@@ -59,6 +71,9 @@ public:
 
 	class AInGameHUD* InGameHUD;
 
+	UFUNCTION(BlueprintCallable)
+	bool TogglePauseMenu();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -67,6 +82,7 @@ private:
 	class APlayerCharacter* Player;
 
 	int AddedScore;
+	bool bShowPauseMenu;
 
 	FTimerHandle ScoringResetTimerHandle;
 	UFUNCTION()

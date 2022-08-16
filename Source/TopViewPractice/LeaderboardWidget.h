@@ -80,5 +80,14 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* Row9Score;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	class UButton* ClearBtn;
+
 	virtual void NativeConstruct() override;
+
+	UFUNCTION(BlueprintCallable)
+	void LoadLeaderBoard();
+
+	UFUNCTION(BlueprintCallable)
+	void ClearLeaderBoard();
 };

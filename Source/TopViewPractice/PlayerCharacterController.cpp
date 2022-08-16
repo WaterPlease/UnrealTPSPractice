@@ -24,6 +24,29 @@ APlayerCharacterController::APlayerCharacterController()
 	Score = 0;
 	Round = 1;
 	RoundTimer = -1.f;
+
+	bShowPauseMenu = false;
+}
+
+bool APlayerCharacterController::TogglePauseMenu()
+{
+	bShowPauseMenu = !bShowPauseMenu;
+	if (InGamePauseWidget)
+	{
+		if (bShowPauseMenu)
+		{
+			bShowMouseCursor = true;
+			SetInputMode(FInputModeUIOnly());
+			InGamePauseWidget->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			bShowMouseCursor = false;
+			SetInputMode(FInputModeGameOnly());
+			InGamePauseWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+	return bShowPauseMenu;
 }
 
 void APlayerCharacterController::BeginPlay()
@@ -34,12 +57,22 @@ void APlayerCharacterController::BeginPlay()
 	SetInputMode(FInputModeGameOnly());
 
 	GetPlayer();
+	if (InGamePauseWidgetAsset)
+	{
+		InGamePauseWidget = CreateWidget<UUserWidget>(this, InGamePauseWidgetAsset);
+		if (InGamePauseWidget)
+		{
+			InGamePauseWidget->AddToViewport((int32)EZORDER::EZO_PauseMenu);
+			InGamePauseWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
 	if (InGameScreenWidgetAsset)
 	{
 		InGameScreenWidget = CreateWidget<UUserWidget>(this, InGameScreenWidgetAsset);
 		if (InGameScreenWidget)
 		{
-			InGameScreenWidget->AddToViewport();
+			InGameScreenWidget->AddToViewport((int32)EZORDER::EZO_InGameUI);
 			InGameScreenWidget->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
@@ -48,7 +81,7 @@ void APlayerCharacterController::BeginPlay()
 		PerkSelectWidget = CreateWidget<UUserWidget>(this, PerkSelectWidgetAsset);
 		if (PerkSelectWidget)
 		{
-			PerkSelectWidget->AddToViewport();
+			PerkSelectWidget->AddToViewport((int32)EZORDER::EZO_InGameUI);
 			PerkSelectWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
@@ -57,7 +90,7 @@ void APlayerCharacterController::BeginPlay()
 		WeaponEquipWidget = CreateWidget<UUserWidget>(this, WeaponEquipWidgetAsset);
 		if (WeaponEquipWidget)
 		{
-			WeaponEquipWidget->AddToViewport();
+			WeaponEquipWidget->AddToViewport((int32)EZORDER::EZO_InGameUI);
 			WeaponEquipWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
@@ -68,7 +101,7 @@ void APlayerCharacterController::BeginPlay()
 		if (EnemyHealthBar)
 		{
 			EnemyHealthBar->SetDesiredSizeInViewport(EnemyHealthBarSize);
-			EnemyHealthBar->AddToViewport();
+			EnemyHealthBar->AddToViewport((int32)EZORDER::EZO_InGameUI);
 			EnemyHealthBar->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
@@ -80,7 +113,6 @@ void APlayerCharacterController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Update In-Game HUD
 	if (InGameHUD &&
 		GetPlayer())
 	{

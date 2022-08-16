@@ -32,6 +32,7 @@
 #include "Camera/CameraActor.h"
 #include "Leaderboard.h"
 #include "PlayerCharacterController.h"
+#include "CustomGameUserSettings.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -224,6 +225,8 @@ void APlayerCharacter::BeginPlay()
 	{
 		EquipWeapon(InitialWeapon);
 	}
+
+	LoadUserSettings();
 }
 
 // Called every frame
@@ -382,7 +385,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction(TEXT("Crouch"), EInputEvent::IE_Released, this, &APlayerCharacter::CrouchUp);
 
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &APlayerCharacter::Jump);
-	//PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Released, this, &APlayerCharacter::CrouchUp);
 
 	PlayerInputComponent->BindAction(TEXT("Grenade"), EInputEvent::IE_Pressed, this, &APlayerCharacter::GrenadeDown);
 	PlayerInputComponent->BindAction(TEXT("Grenade"), EInputEvent::IE_Released, this, &APlayerCharacter::GrenadeUp);
@@ -404,6 +406,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	PlayerInputComponent->BindAction(TEXT("CameraSide"), EInputEvent::IE_Pressed, this, &APlayerCharacter::CameraSideDown);
 	PlayerInputComponent->BindAction(TEXT("CameraSide"), EInputEvent::IE_Released, this, &APlayerCharacter::CameraSideUp);
+
+	PlayerInputComponent->BindAction(TEXT("ESC"), EInputEvent::IE_Pressed, this, &APlayerCharacter::PauseDown);
 
 	PlayerInputComponent->BindAxis(TEXT("Horizontal"), this, &APlayerCharacter::InputHorizontal);
 	PlayerInputComponent->BindAxis(TEXT("Vertical"), this, &APlayerCharacter::InputVertical);
@@ -712,6 +716,16 @@ void APlayerCharacter::CameraSideUp()
 	bCameraSideInput = false;
 }
 
+void APlayerCharacter::PauseDown()
+{
+	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(Controller);
+
+	if (PlayerController)
+	{
+		PlayerController->TogglePauseMenu();
+	}
+}
+
 bool APlayerCharacter::CanMove()
 {
 	return 
@@ -769,6 +783,9 @@ void APlayerCharacter::SpawnGrenade()
 void APlayerCharacter::EquipWeapon(AWeapon* Weapon)
 {
 	AWeapon* OldWeapon = EquippedWeapon;
+	Weapon->AutoDestroyDelay = -1.f;
+	GetWorldTimerManager().ClearTimer(Weapon->DestroyTimerHandle);
+
 	EquippedWeapon = Weapon;
 	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName("RightHandSocket"));
 	Weapon->GetMesh()->SetVisibility(false);
@@ -903,6 +920,16 @@ void APlayerCharacter::SetCameraDistance(float Value)
 	CameraDistance = Value;
 }
 
+void APlayerCharacter::LoadUserSettings()
+{
+	UCustomGameUserSettings* GameUserSettings = UCustomGameUserSettings::GetUserSettings();
+	if (GameUserSettings)
+	{
+		CameraSensitivity = GameUserSettings->GetSensitivity();
+		PlayerName = GameUserSettings->GetPlayerName();
+	}
+}
+
 void APlayerCharacter::ExitGame_Implementation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("EXIT!!!!!!!!"));
@@ -915,7 +942,9 @@ void APlayerCharacter::ExitGame_Implementation()
 			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 			if (Controller)
 			{
+				GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 				GetMesh()->SetVisibility(false);
+				WeaponMeshComponent->SetVisibility(false);
 				CombatUI->SetVisibility(false);
 				PlayerController->SetViewTargetWithBlend(SpawnManager->ExitCamera, 2.0f);
 			}
@@ -924,7 +953,7 @@ void APlayerCharacter::ExitGame_Implementation()
 	TArray<ULeaderboard*> Rows;
 	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
 	ULeaderboard::LoadRecords(Rows);
-	ULeaderboard::WriteRecord(Rows,FString("TEST2"), PlayerController->Score);
+	ULeaderboard::WriteRecord(Rows,PlayerName, PlayerController->Score);
 
 	GetWorldTimerManager().SetTimer(ExitTimerHandle, this, &APlayerCharacter::ReturnToMain, 5.0f);
 }

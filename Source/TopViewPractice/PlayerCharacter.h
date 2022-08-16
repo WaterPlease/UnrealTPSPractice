@@ -273,6 +273,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character | Etc")
 	bool bCanExit;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character | Etc")
+	FString PlayerName;
 
 	FVector2D CursorOffset;
 	FVector CursorLocation;
@@ -366,6 +368,9 @@ public:
 	UFUNCTION()
 	void CameraSideUp();
 
+	UFUNCTION()
+	void PauseDown();
+
 	/**
 	* User Function Declaration
 	*/
@@ -413,6 +418,9 @@ public:
 	float GetCameraDistance();
 	UFUNCTION(BlueprintCallable)
 	void SetCameraDistance(float Value);
+
+	UFUNCTION(BlueprintCallable)
+	void LoadUserSettings();
 
 
 	UFUNCTION(BlueprintNativeEvent)

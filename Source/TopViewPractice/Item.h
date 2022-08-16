@@ -33,12 +33,19 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
 	bool bHighlighten;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+	float AutoDestroyDelay;
+
 	FORCEINLINE class UStaticMeshComponent* GetMesh() { return Mesh; }
+
+	FTimerHandle DestroyTimerHandle;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
+
+	void AutoDestroy();
 
 	bool ToggleHighlight();
 
