@@ -9,7 +9,8 @@
 # 플레이 영상 동영상
 
 Youtube Link  :  https://youtu.be/yhGP_yIKe7U
-
+Download Link : https://drive.google.com/file/d/1XUosqQoUH_OcdFbDZQOxslCjweAez0hm/view?usp=sharing
+- Warning : 3.3
 # 주요 기능
 
 ## UI
