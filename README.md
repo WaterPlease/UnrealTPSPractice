@@ -4,7 +4,7 @@
 
 - 엔진 : Unreal Engine 4 4.27.2
 - 에디터 : Microsoft Visual Studio Community 2022 17.0.4
-- 제작기간 : 
+- 제작기간 : 2022. 07. 21 ~ 2022. 08. 18
 
 # 플레이 영상 동영상
 
