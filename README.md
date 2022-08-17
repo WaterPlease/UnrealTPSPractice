@@ -37,23 +37,14 @@ Youtube Link  :  https://youtu.be/yhGP_yIKe7U
 
 - IK를 적용하여 캐릭터의 다리가 다양한 지면에 반응할 수 있습니다.
 
-  - ![IK_LEG_STAIR](Documents/Imgs/IK_LEG_STAIR.png)
+  - ![IK_LEG_STAIR](Documents/Imgs/IK_LEG_STAIR.png)![IK_LEG_BALLS](Documents/Imgs/IK_LEG_BALLS.png)![IK_LEG_SLOPE](Documents/Imgs/IK_LEG_SLOPE.png)
 
-  ![IK_LEG_BALLS](Documents/Imgs/IK_LEG_BALLS.png)
-
-  ![IK_LEG_SLOPE](Documents/Imgs/IK_LEG_SLOPE.png)
-
-  - <img src="Documents/Imgs/IK_Stand2.gif" alt="IK_Stand2" style="zoom:75%;" />
-
-    <img src="Documents/Imgs/IK_Walk.gif" alt="IK_Walk" width="30%" />
+  - <img src="Documents/Imgs/IK_Stand2.gif" alt="IK_Stand2" style="zoom:75%;" /><img src="Documents/Imgs/IK_Walk.gif" alt="IK_Walk" width="30%" />
 
 - IK를 적용하여 하나의 애니메이션으로 캐릭터의 왼손이 여러 총기의 형태에 맞게 파지할 수 있습니다.
 
-  - ![IK_HAND_74U](Documents/Imgs/IK_HAND_74U.png)
+  - ![IK_HAND_74U](Documents/Imgs/IK_HAND_74U.png)![IK_HAND_ASVAL](Documents/Imgs/IK_HAND_ASVAL.png)![IK_HAND_XM4](Documents/Imgs/IK_HAND_XM4.png)
 
-  ![IK_HAND_ASVAL](Documents/Imgs/IK_HAND_ASVAL.png)
-
-  ![IK_HAND_XM4](Documents/Imgs/IK_HAND_XM4.png)
 
 
 
@@ -62,3 +53,6 @@ Youtube Link  :  https://youtu.be/yhGP_yIKe7U
 원거리 적의 Deflection shooting
 
 - ![AI_DeflectionShoot](Documents/Imgs/AI_DeflectionShoot.gif)
+
+- 원거리 적의 격발 당시 위치벡터를 $E$, 플레이어의 위치벡터를 $P$, 플레이어의 속도벡터를 $v_p$, 투사체의 속력을 $V_E$, 투사체의 방향벡터를 $d_E$, 투사체가 플레이어와 충돌할 때까지의 시간을 $\Delta t$라 하면 다음의 수식으로 투사체의 방향벡터 $d_E$를 얻을 수 있습니다.
+- ![](Documents/Imgs/DeflectionFormular.png)
