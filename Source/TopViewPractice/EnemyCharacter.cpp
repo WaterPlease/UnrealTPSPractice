@@ -151,11 +151,9 @@ void AEnemyCharacter::AttackSphereBeginOverlap(UPrimitiveComponent* OverlappedCo
 {
 	if ((AActor*)PlayerCharacter != OtherActor)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Not Player"));
 		return;
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("ATTACK OVERLAP Begin"));
 	bCanAttack = true;
 }
 
@@ -163,10 +161,8 @@ void AEnemyCharacter::AttackSphereEndOverlap(UPrimitiveComponent* OverlappedComp
 {
 	if ((AActor*)PlayerCharacter != OtherActor)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Not Player"));
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("ATTACK OVERLAP End"));
 	bCanAttack = false;
 }
 
@@ -194,15 +190,12 @@ void AEnemyCharacter::AttackCollisionBeginOverlap(UPrimitiveComponent* Overlappe
 			{
 				TArray<FHitResult> HitResults;
 				bool bHit = GetWorld()->SweepMultiByChannel(HitResults, AttackCollision->GetComponentLocation(), AttackCollision->GetComponentLocation(), AttackCollision->GetComponentQuat(), ECC_Camera, AttackCollision->GetCollisionShape());
-				//DrawDebugBox(GetWorld(), TestCol->GetComponentLocation(), TestCol->GetScaledBoxExtent(), TestCol->GetComponentQuat(), FColor::Red, true, 5.f);
 				if (bHit)
 				{
 					for (auto HitResult : HitResults)
 					{
 						if (Cast<APlayerCharacter>(HitResult.GetActor()))
 						{
-							//UE_LOG(LogTemp, Warning, TEXT("Melee Attack hit at : (%f, %f, %f)"), HitResult.ImpactPoint.X, HitResult.ImpactPoint.Y, HitResult.ImpactPoint.Z);
-							//DrawDebugSphere(GetWorld(), HitResult.Location, 50.f, 10, FColor::Red, true, 5.f);
 							UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PlayerCharacter->DamageImpactParticleSystem, HitResult.ImpactPoint, FRotator::ZeroRotator, true);
 							break;
 						}
@@ -269,7 +262,6 @@ void AEnemyCharacter::DeactivateAttackCollision(int idx)
 void AEnemyCharacter::AttackDone()
 {
 	EnemyActionState = EEnemyActionState::EEA_Idle;
-	UE_LOG(LogTemp, Warning, TEXT("AttackDone"));
 	GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AEnemyCharacter::WaitAttackDone, AttackDelay);
 }
 
@@ -377,11 +369,8 @@ void AEnemyCharacter::Die()
 	if (EnemyActionState == EEnemyActionState::EEA_Die) return;
 	EnemyActionState = EEnemyActionState::EEA_Die;
 
-	UE_LOG(LogTemp, Warning, TEXT("ENEMY DIE!"));
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
-	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
-	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_EngineTraceChannel1, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetSimulatePhysics(true);

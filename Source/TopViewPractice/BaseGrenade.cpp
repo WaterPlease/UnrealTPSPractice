@@ -41,9 +41,6 @@ void ABaseGrenade::BeginPlay()
 
 	Sphere->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	Sphere->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel2);
-	//Sphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	//Sphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic,ECollisionResponse::ECR_Block);
-	//Sphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Ignore);
 
 	EffectSphere->SetCollisionProfileName(FName("OverlapAllDynamic"));
 	EffectSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Ignore);

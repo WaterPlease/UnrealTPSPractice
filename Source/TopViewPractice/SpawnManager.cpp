@@ -44,18 +44,6 @@ void ASpawnManager::AddKilledEnemy()
 	{
 		TArray<AActor*> EnemyCharacters;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyCharacter::StaticClass(), EnemyCharacters);
-		/*
-		for (auto _Enemy : EnemyCharacters)
-		{
-			auto Enemy = Cast<AEnemyCharacter>(_Enemy);
-
-			if (Enemy)
-			{
-				Enemy->Score = 0.f;
-				Enemy->Die();
-			}
-		}
-		*/
 		NextRound();
 	}
 }
@@ -122,7 +110,6 @@ int ASpawnManager::SampleFromCDF(const TArray<float>& CDF)
 	}
 	Cursor = Max;
 
-	UE_LOG(LogTemp, Warning, TEXT("U : %f     Min-Max-Cursor : %d-%d-%d"), U, Min, Max, Cursor);
 
 	return Cursor;
 }
@@ -134,7 +121,6 @@ void ASpawnManager::Tick(float DeltaTime)
 
 	if (bSpawn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Enemy count check"));
 		Algo::RandomShuffle(SpawnVolumes);
 
 		int N = SpawnVolumes.Num();

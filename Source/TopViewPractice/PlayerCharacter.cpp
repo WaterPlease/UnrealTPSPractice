@@ -62,7 +62,6 @@ APlayerCharacter::APlayerCharacter()
 
 	// Combat UI Configuration
 	CombatUI = CreateDefaultSubobject<UWidgetComponent>(TEXT("CombatUI"));
-	//CombatUI->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	CombatUI->SetupAttachment(CameraComponent);
 	CombatUI->bHiddenInSceneCapture = true;
 
@@ -739,7 +738,6 @@ void APlayerCharacter::Reload()
 		RoundRemain = RoundCapacity + PerkMagSize;
 	else
 		RoundRemain = RoundCapacity + PerkMagSize + 1;
-	UE_LOG(LogTemp, Warning, TEXT("Remain Round : %d"), RoundRemain);
 }
 
 void APlayerCharacter::DiveDone()
@@ -828,7 +826,6 @@ void APlayerCharacter::Die()
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 
-	UE_LOG(LogTemp, Warning, TEXT("Try Return To Main"));
 	GetWorldTimerManager().SetTimer(ExitTimerHandle, this, &APlayerCharacter::ReturnToMain, 5.0f);
 }
 
@@ -841,8 +838,6 @@ void APlayerCharacter::OnMuzzleTriggerOverlapBegin(UPrimitiveComponent* Overlapp
 		TimeMuzzleMoving = 0.f;
 
 	MuzzleColliderArray.Add(OtherActor);
-
-	UE_LOG(LogTemp, Warning, TEXT("Muzzle UP!"));
 }
 
 // Muzzle up event handler
@@ -856,7 +851,6 @@ void APlayerCharacter::OnMuzzleTriggerOverlapEnd(UPrimitiveComponent* Overlapped
 	if (MuzzleColliderArray.Num() == 0)
 	{
 		bMuzzleUp = false;
-		UE_LOG(LogTemp, Warning, TEXT("Muzzle Down!"));
 	}
 }
 
@@ -932,7 +926,6 @@ void APlayerCharacter::LoadUserSettings()
 
 void APlayerCharacter::ExitGame_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("EXIT!!!!!!!!"));
 	AActor* _SpawnManager = UGameplayStatics::GetActorOfClass(GetWorld(), ASpawnManager::StaticClass());
 	if (_SpawnManager)
 	{
@@ -960,7 +953,6 @@ void APlayerCharacter::ExitGame_Implementation()
 
 void APlayerCharacter::ReturnToMain()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Return To Main"));
 	UGameplayStatics::OpenLevel(GetWorld(), FName("MainMenu"));
 }
 
@@ -978,7 +970,6 @@ void APlayerCharacter::UpdateCharacterLook()
 		FVector RightVector = GetCameraComponent()->GetRightVector();
 
 		FVector LookVector;
-		//	UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), CursorLocation);
 		if (bRMBInput || bLMBLook)
 		{
 			LookVector = CursorLocation - GetActorLocation();//FrontVector;
@@ -1030,7 +1021,6 @@ void APlayerCharacter::UpdateCurosorTransform()
 			ECollisionChannel::ECC_GameTraceChannel1
 		);
 		FVector MuzzleLocation = WeaponMeshComponent->GetSocketLocation(FName("MuzzleSocket"));
-		//if (PlayerController->GetHitResultAtScreenPosition(FVector2D(point.X / 2, point.Y / 2), ECollisionChannel::ECC_Visibility, true, HitResult))
 		if (bCanAim)
 		{
 			CursorLocation = HitResult.Location;
@@ -1046,15 +1036,6 @@ void APlayerCharacter::UpdateCurosorTransform()
 			
 			// Cursor on Enemy case
 			EnemyOnCursor = Cast<AEnemyCharacter>(HitResult.Actor);
-
-			//DrawDebugSphere(GetWorld(), CursorLocation, 50.f, 16, FColor::Red);
-			/*
-			FVector CursorFV = HitResult.ImpactNormal;
-			FRotator CursorR = CursorFV.Rotation();
-			CursorToWorld->SetWorldLocation(HitResult.Location);
-			CursorToWorld->SetWorldRotation(CursorR);
-			bCanAim = true;
-			*/
 		}
 		else
 		{
@@ -1095,7 +1076,6 @@ void APlayerCharacter::Fire()
 	if (RoundRemain == 0)
 	{
 		// Play empty shot sound
-		UE_LOG(LogTemp, Warning, TEXT("Remain Round : %d"), RoundRemain);
 		UGameplayStatics::PlaySound2D(GetWorld(), EmptyShotSoundCue);
 		bTryFire = false;
 		return;
@@ -1103,7 +1083,6 @@ void APlayerCharacter::Fire()
 	
 	TimeAfterShot = 0.f;
 	RoundRemain -= 1;
-	UE_LOG(LogTemp, Warning, TEXT("Remain Round : %d"), RoundRemain);
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)

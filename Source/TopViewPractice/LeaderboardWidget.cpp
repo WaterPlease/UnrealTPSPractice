@@ -28,7 +28,6 @@ void ULeaderboardWidget::NativeConstruct()
 
 void ULeaderboardWidget::LoadLeaderBoard()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Load Leaderboard"));
 
 	TArray<ULeaderboard*> Rows;
 	ULeaderboard::LoadRecords(Rows);

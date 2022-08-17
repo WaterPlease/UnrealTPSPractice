@@ -73,8 +73,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy | UI")
 	class UStaticMeshComponent* RadarPoint;
 
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy | Combat")
-	//class UCapsuleComponent* Bodyparts[15];
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

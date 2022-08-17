@@ -78,21 +78,6 @@ void UPlayerCharacterAnimInstance::UpdateProperties()
 			GetWorld()->DeltaTimeSeconds,
 			PlayerCharacter->CharacterAimTurnSpeed
 		);
-		/*
-		if (bADS || bTryFire)
-		{
-			
-		}
-		else
-		{
-			ADSSpinePitch = FMath::FInterpTo(
-				ADSSpinePitch,
-				0.f,
-				GetWorld()->DeltaTimeSeconds,
-				PlayerCharacter->CharacterAimTurnSpeed
-				);
-		}
-		*/
 
 		CapsuleLocation = PlayerCharacter->GetCapsuleComponent()->GetComponentLocation();
 		
@@ -128,7 +113,6 @@ void UPlayerCharacterAnimInstance::UpdateProperties()
 			IKInterpSpeed
 		);
 		IKTraceHips = FMath::Min<float>(IKTraceRightFoot, IKTraceLeftFoot);
-		//IKTraceHips = FMath::Max<float>(IKTraceHips, -50.f);
 
 
 		IKHandGripLocation = PlayerCharacter->WeaponMeshComponent->GetSocketLocation("GripSocket");
@@ -158,24 +142,6 @@ float UPlayerCharacterAnimInstance::IKFootTrace(FName SocketName, float TraceDis
 	CollisionQueryParam.bDebugQuery = true;
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionQueryParam);
 
-	// Draw Debug Line
-	/*DrawDebugLine(
-		GetWorld(),
-		TraceStart,
-		HitResult.Location,
-		FColor::Red
-	);
-
-	DrawDebugSphere(
-		GetWorld(),
-		HitResult.Location,
-		30.f,
-		16,
-		FColor::Green
-	);
-	*/
-
-	// float HitDistance = FVector::Distance(HitResult.Location, TraceEnd);
 	float FootHeightDelta = HitResult.Location.Z - TraceEnd.Z - IKUnderGroundDepth;
 	if (!bHit)
 		FootHeightDelta = 0.f;
@@ -186,9 +152,7 @@ float UPlayerCharacterAnimInstance::IKFootTrace(FName SocketName, float TraceDis
 	OutHitRotation.Roll = FMath::RadiansToDegrees(FMath::Atan2(Normal.Y, Normal.Z));
 	OutHitRotation.Pitch = -FMath::RadiansToDegrees(FMath::Atan2(Normal.X, Normal.Z));
 	OutHitRotation.Yaw = 0.f;
-	//OutHitRotation *= IKRotaionStrength;
 	if (!bHit || !bIKRotation)
 		OutHitRotation = FRotator(0.f);
-	//if (FootHeightDelta > 0) FootHeightDelta += 10.f;
 	return FootHeightDelta;
 }

@@ -32,7 +32,7 @@ ABaseBullet::ABaseBullet()
 	RemainBounce = 1;
 
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 // Called when the game starts or when spawned
@@ -59,11 +59,6 @@ void ABaseBullet::LauchBullet(const FVector& Direction)
 {
 	ProjectileMovementComponent->InitialSpeed = InitialSpeed;
 	ProjectileMovementComponent->Velocity = InitialSpeed * Direction.GetSafeNormal();
-	UE_LOG(LogTemp, Warning, TEXT("Bullet depart : %f -> (%f,%f,%f)"),
-		ProjectileMovementComponent->Velocity.Size(),
-		ProjectileMovementComponent->Velocity.X,
-		ProjectileMovementComponent->Velocity.Y,
-		ProjectileMovementComponent->Velocity.Z);
 
 	GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ABaseBullet::DestroyBullet, LifeTime);
 }
@@ -72,13 +67,6 @@ void ABaseBullet::DestroyBullet()
 {
 	GetWorldTimerManager().ClearTimer(DestroyTimerHandle);
 	Destroy();
-}
-
-// Called every frame
-void ABaseBullet::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 
 void ABaseBullet::OnBulletHeadOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -95,21 +83,6 @@ void ABaseBullet::OnBulletHeadOverlapEnd(UPrimitiveComponent* OverlappedComponen
 
 void ABaseBullet::OnBulletHeadHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Spawn decal
-	// ...
-
-	/*
-	AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor);
-	if (Enemy && bShotByPlayer)
-	{
-		if (Enemy->EnemyActionState != EEnemyActionState::EEA_Die)
-		{
-			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(Shooter);
-			PlayerCharacter->ShowHitmarker();
-		}
-	}
-	*/
-
 	// Add impulse to non character
 	AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor);
 	if (!Enemy && OtherActor)
@@ -163,6 +136,7 @@ void ABaseBullet::OnBulletHeadHit(UPrimitiveComponent* HitComponent, AActor* Oth
 		}
 	}
 
+	// Player Impact Reaction
 	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
 	if (PlayerCharacter)
 	{
@@ -176,6 +150,7 @@ void ABaseBullet::OnBulletHeadHit(UPrimitiveComponent* HitComponent, AActor* Oth
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PlayerCharacter->DamageImpactParticleSystem, Hit.ImpactPoint, FRotator::ZeroRotator, true);
 		}
 	}
+
 	// Apply Damage
 	if (Shooter != OtherActor)
 	{

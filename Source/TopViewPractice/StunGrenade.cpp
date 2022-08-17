@@ -49,9 +49,7 @@ void AStunGrenade::Detonate()
 			AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(HitActor);
 			if (Enemy && !StunnedEnemies.Contains(Enemy))
 			{
-				UE_LOG(LogTemp,Warning,TEXT("Stun : %f * %f"), Enemy->GetCharacterMovement()->MaxWalkSpeed, StunFactor)
 				Enemy->GetCharacterMovement()->MaxWalkSpeed = Enemy->GetCharacterMovement()->MaxWalkSpeed * StunFactor;
-				UE_LOG(LogTemp, Warning, TEXT("Stun : = %f"), Enemy->GetCharacterMovement()->MaxWalkSpeed * StunFactor)
 				StunnedEnemies.Add(Enemy);
 			}
 
