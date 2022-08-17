@@ -35,7 +35,7 @@ Download Link : https://drive.google.com/file/d/1XUosqQoUH_OcdFbDZQOxslCjweAez0h
 
 ## 캐릭터
 
-#### Inverse Kinectics 적용
+#### Inverse Kinetics 적용
 
 - IK를 적용하여 캐릭터의 다리가 다양한 지면에 반응할 수 있습니다.
 
